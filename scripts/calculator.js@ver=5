@@ -1,0 +1,96 @@
+function DoCalculate() { 
+    var temp1 = $("#txtAmount").val();
+    if (temp1.length == 0) {
+        temp1 = 0
+    }
+    var initial = parseFloat(temp1),
+    rate = 0.0,
+    planName;
+
+    if (initial < 10){
+        rate = 0
+        pos = -116;
+        planName="No Plan";
+        ProfitPercentCalculate(pos);
+    } else {
+        if($("#plan-1").is(":checked")) {
+            planName="10%";
+            rate = 0.0919;
+            pos = -116;
+            ProfitPercentCalculate( pos)
+        } if($("#plan-2").is(":checked")) {
+            planName="30% ";
+            rate = 0.1210;
+            pos = -250;
+            ProfitPercentCalculate( pos)
+        } if($("#plan-3").is(":checked")) {
+            planName="45%";
+            rate = 0.1375;
+            pos = -250;
+            ProfitPercentCalculate( pos)
+        }if($("#plan-4").is(":checked")) {
+            planName="55%";
+            rate = 0.75;
+            pos = -250;
+            ProfitPercentCalculate( pos)
+        }
+		
+    }
+
+
+    if (initial < 0.0){
+        $("#lblDailyProfit").text("0.0");
+        $("#lblTotalProfit").text("0.0");
+        $("#lblTotalReturn").text("0.0");
+        
+        $("#lblProfit").text("0.0");
+        
+    } else {
+        $("#lblSelectedPlan").text(planName);
+        
+        if($("#plan-1").is(":checked")) {
+			$("#lblProfit").text("10");
+            $("#lblDailyProfit").text(parseFloat(initial * rate).toFixed(2));
+            $("#lblTotalProfit").text(parseFloat(((initial * rate) * 12) - initial).toFixed(2));
+            $("#lblTotalReturn").text(parseFloat((initial * rate) * 12).toFixed(2));
+            $("#lblProfitType").text("Profit");
+            $("#lblProfitPeriod").text("In 3 Days");
+        } if($("#plan-2").is(":checked")) {
+			$("#lblProfit").text("30");
+            $("#lblDailyProfit").text(parseFloat(initial * rate).toFixed(2));
+            $("#lblTotalProfit").text(parseFloat(((initial * rate) * 12) - initial).toFixed(2));
+            $("#lblTotalReturn").text(parseFloat((initial * rate) * 12).toFixed(2));
+            $("#lblProfitType").text("Profit");
+            $("#lblProfitPeriod").text("In 5 Days");
+        } if($("#plan-3").is(":checked")) {
+			$("#lblProfit").text("45");
+            $("#lblDailyProfit").text(parseFloat(initial * rate).toFixed(2));
+            $("#lblTotalProfit").text(parseFloat(((initial * rate) * 12) - initial).toFixed(2));
+            $("#lblTotalReturn").text(parseFloat((initial * rate) * 12).toFixed(2));
+            $("#lblProfitType").text("Profit");
+            $("#lblProfitPeriod").text("In 7 Days");
+        }if($("#plan-4").is(":checked")) {
+			$("#lblProfit").text("55");
+            $("#lblDailyProfit").text(parseFloat(initial * rate).toFixed(2));
+            $("#lblTotalProfit").text(parseFloat(((initial * rate) * 12) - initial).toFixed(2));
+            $("#lblTotalReturn").text(parseFloat((initial * rate) * 12).toFixed(2));
+            $("#lblProfitType").text("Profit");
+            $("#lblProfitPeriod").text("In 10 Days");
+        }
+		
+    }
+}
+function ProfitPercentCalculate( pos) {
+    var myTimeline = anime.timeline();
+   
+    myTimeline
+        .add({
+        targets: '.percent-path',
+        translateY:[currentPos, pos],
+        translateX:[-500,-507.77],
+        duration:2000
+    })
+    currentPos=pos;
+}
+
+var currentPos=100;
