@@ -53,8 +53,8 @@ if($account_status == "Disabled"){
  echo '<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">Your account has been disabled. Please contact Admin</div>';
 // echo '<div class="error" style="max-width: 50% !important;">Your account has been disabled. Please contact Admin</div>';
 }elseif($account_status == "Unverified"){
- echo false;
-// echo '<div class="error" style="max-width: 50% !important;">Your account has been disabled. Please contact Admin</div>';
+//  echo false;
+echo '<div class="error" style="max-width: 50% !important;">Your account is being verified, check back again later</div>';
 }else{
     $_SESSION['id']=$row['id'];
     $_SESSION['email']=$row['email'];

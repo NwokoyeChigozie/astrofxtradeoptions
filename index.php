@@ -3,57 +3,56 @@
 session_start();
 include('phpscripts/connection.php');
 include('phpscripts/functions.php');
-if(isset($_GET['ref'])){
+if (isset($_GET['ref'])) {
     $_SESSION['ref'] = $_GET['ref'];
 }
 ?>
 
-<?php 
+<?php
 $forgot_passsword_v = 'false';
-if(isset($_GET['sr']) && isset($_GET['pri']) && isset($_GET['email']) && isset($_GET['et'])){
+if (isset($_GET['sr']) && isset($_GET['pri']) && isset($_GET['email']) && isset($_GET['et'])) {
     $get_email = $_GET['email'];
     $get_sr = $_GET['sr'];
     $get_pri = $_GET['pri'];
     $get_et = $_GET['et'];
- $sql = "SELECT * FROM password_recovery WHERE email='$get_email' AND elapse_time='$get_et'";
-        $result = mysqli_query($link, $sql);
-        $count = mysqli_num_rows($result);
-        if($count == 1){
-            $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
-            $main_sr = $row['sr'];
-            $main_et = $row['elapse_time'];
-            $main_count = $row['count'];
-            
-            if(time() < $main_et && $get_sr == $main_sr && $main_count == 0){
-               $forgot_passsword_v = 'true'; 
-            }
+    $sql = "SELECT * FROM password_recovery WHERE email='$get_email' AND elapse_time='$get_et'";
+    $result = mysqli_query($link, $sql);
+    $count = mysqli_num_rows($result);
+    if ($count == 1) {
+        $row = mysqli_fetch_array($result, MYSQLI_ASSOC);
+        $main_sr = $row['sr'];
+        $main_et = $row['elapse_time'];
+        $main_count = $row['count'];
+
+        if (time() < $main_et && $get_sr == $main_sr && $main_count == 0) {
+            $forgot_passsword_v = 'true';
         }
+    }
 }
 ?>
 
 
 <?php
 
-if(isset($_SESSION['id'])){
+if (isset($_SESSION['id'])) {
     $base_id = $_SESSION['id'];
-    $plan_duration = array(0, 259200,432000,604800,864000);
-//    $plan_percentage = array(0, 0.1,0.3,0.45,0.55);
-    $plan_percentage = array(0, 0.135,0.275,0.483,0.85);
-    $part_plan_percentage = array(0, 0.045,0.055,0.069,0.085);
+    $plan_duration = array(0, 259200, 432000, 604800, 864000);
+    //    $plan_percentage = array(0, 0.1,0.3,0.45,0.55);
+    $plan_percentage = array(0, 0.135, 0.275, 0.483, 0.85);
+    $part_plan_percentage = array(0, 0.045, 0.055, 0.069, 0.085);
     $depos = [];
     $all_depos = [];
     $all_withd = [];
-       $sql = "SELECT * FROM `deposit_list` WHERE u_id = '$base_id' AND status = 'pending'" ;
-          if($result = mysqli_query($link, $sql)){
-    if(mysqli_num_rows($result)>0){
-        while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
-            $depos[] = $row;
-            
+    $sql = "SELECT * FROM `deposit_list` WHERE u_id = '$base_id' AND status = 'pending'";
+    if ($result = mysqli_query($link, $sql)) {
+        if (mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                $depos[] = $row;
+            }
         }
     }
-          }
-    if(!empty($depos) && $depos[0] != ""){
-        foreach($depos as $depo){
+    if (!empty($depos) && $depos[0] != "") {
+        foreach ($depos as $depo) {
             $depo_id = $depo['id'];
             $depo_type = $depo['type'];
             $depo_amount = $depo['amount'];
@@ -61,128 +60,111 @@ if(isset($_SESSION['id'])){
             $depo_create_timestamp = $depo['create_timestamp'];
             $depo_last_update_timestamp = $depo['last_update_timestamp'];
             $new_last_update_timestamp = time();
-//             && $depo_amount == $depo_total_amount
-            if(time() - $depo_create_timestamp > $plan_duration[$depo_type]){
-//                $n_time = time() - $depo_last_update_timestamp;
-//            $int_day = $n_time / (24 * 3600);
-//            $int_day = $int_day / ($plan_duration[$depo_type]/(24 * 3600));
-                
+            //             && $depo_amount == $depo_total_amount
+            if (time() - $depo_create_timestamp > $plan_duration[$depo_type]) {
+                //                $n_time = time() - $depo_last_update_timestamp;
+                //            $int_day = $n_time / (24 * 3600);
+                //            $int_day = $int_day / ($plan_duration[$depo_type]/(24 * 3600));
+
                 $new_total_amount = $depo_amount + ($plan_percentage[$depo_type] * $depo_amount);
-                
-                $sql_t = "UPDATE `deposit_list` SET `total_amount`='$new_total_amount', `last_update_timestamp`='$new_last_update_timestamp' WHERE `id`= '$depo_id'";    
-                                        if(mysqli_query($link, $sql_t)){
-                                        }
-                
-            }else{
-               $rate_d = floor((time() - $depo_create_timestamp)/(86400));
-               $new_total_amount = $depo_amount + ($part_plan_percentage[$depo_type] * $depo_amount * $rate_d);
-                $sql_t = "UPDATE `deposit_list` SET `total_amount`='$new_total_amount', `last_update_timestamp`='$new_last_update_timestamp' WHERE `id`= '$depo_id'";    
-                                        if(mysqli_query($link, $sql_t)){
-                                        }
-            }
-            
-            
-        }
-    }
- 
-      $sql = "SELECT * FROM `users` WHERE `id` = '$base_id'" ;
-          if($result = mysqli_query($link, $sql)){
-    if(mysqli_num_rows($result)>0){
-        while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
-            $total_referal_commission_1 =$row['total_referal_commission'];
-            if($total_referal_commission_1 == "" || empty($total_referal_commission_1)){
-                $total_referal_commission_1 = 0;
+
+                $sql_t = "UPDATE `deposit_list` SET `total_amount`='$new_total_amount', `last_update_timestamp`='$new_last_update_timestamp' WHERE `id`= '$depo_id'";
+                if (mysqli_query($link, $sql_t)) {
+                }
+            } else {
+                $rate_d = floor((time() - $depo_create_timestamp) / (86400));
+                $new_total_amount = $depo_amount + ($part_plan_percentage[$depo_type] * $depo_amount * $rate_d);
+                $sql_t = "UPDATE `deposit_list` SET `total_amount`='$new_total_amount', `last_update_timestamp`='$new_last_update_timestamp' WHERE `id`= '$depo_id'";
+                if (mysqli_query($link, $sql_t)) {
+                }
             }
         }
     }
-          }
-            
-                     
-        $sql = "SELECT * FROM `deposit_list` WHERE u_id = '$base_id'" ;
-          if($result = mysqli_query($link, $sql)){
-    if(mysqli_num_rows($result)>0){
-        while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
-            $all_depos[] = $row;
-            
+
+    $sql = "SELECT * FROM `users` WHERE `id` = '$base_id'";
+    if ($result = mysqli_query($link, $sql)) {
+        if (mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                $total_referal_commission_1 = $row['total_referal_commission'];
+                if ($total_referal_commission_1 == "" || empty($total_referal_commission_1)) {
+                    $total_referal_commission_1 = 0;
+                }
+            }
         }
     }
-          }  
-    
-        $sql = "SELECT * FROM `history` WHERE u_id = '$base_id'" ;
-          if($result = mysqli_query($link, $sql)){
-    if(mysqli_num_rows($result)>0){
-        while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
-            $all_withd[] = $row;
-            
+
+
+    $sql = "SELECT * FROM `deposit_list` WHERE u_id = '$base_id'";
+    if ($result = mysqli_query($link, $sql)) {
+        if (mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                $all_depos[] = $row;
+            }
         }
     }
-          }  
+
+    $sql = "SELECT * FROM `history` WHERE u_id = '$base_id'";
+    if ($result = mysqli_query($link, $sql)) {
+        if (mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                $all_withd[] = $row;
+            }
+        }
+    }
     $last_investment_v = 0;
     $account_balance_v = $total_referal_commission_1;
     $total_earnings_v = $total_referal_commission_1;
     $all_time_investments = 0;
-//    print_r($all_depos);
-    if(!empty($all_depos) && !empty($all_depos[0])){
+    //    print_r($all_depos);
+    if (!empty($all_depos) && !empty($all_depos[0])) {
         $de_counter = 0;
-        foreach($all_depos as $all_depo){
+        foreach ($all_depos as $all_depo) {
             $all_depo_id = $all_depo['id'];
             $all_depo_type = $all_depo['type'];
             $all_depo_amount = $all_depo['amount'];
             $all_depo_total_amount = $all_depo['total_amount'];
             $all_depo_status = $all_depo['status'];
             $de_counter = $de_counter + 1;
-            
+
             $all_time_investments = $all_time_investments + $all_depo_amount;
-            
-            if($de_counter == 0){
+
+            if ($de_counter == 0) {
                 $last_investment_v = $all_depo_amount;
             }
-            if($all_depo_status == "pending"){
+            if ($all_depo_status == "pending") {
                 $account_balance_v = $account_balance_v + $all_depo_total_amount;
                 $total_earnings_v = $total_earnings_v + ($all_depo_total_amount - $all_depo_amount);
             }
-            
-            
-            
         }
     }
-    
+
     $last_withdrawal_v = 0;
     $pending_withdrawal_v = 0;
     $total_withdrawal_v = 0;
-//    print_r($all_withd);
-        if(!empty($all_withd) && !empty($all_withd[0])){
+    //    print_r($all_withd);
+    if (!empty($all_withd) && !empty($all_withd[0])) {
         $wi_counter = 0;
-        foreach($all_withd as $all_with){
+        foreach ($all_withd as $all_with) {
             $all_with_id = $all_depo['id'];
             $all_with_amount = $all_depo['amount'];
             $all_with_status = $all_depo['status'];
             $wi_counter = $wi_counter + 1;
-            
+
             $total_withdrawal_v = $total_withdrawal_v + $all_with_amount;
-            
-            if($wi_counter == 0){
+
+            if ($wi_counter == 0) {
                 $last_withdrawal_v = $all_with_amount;
             }
-            if($all_depo_status == "pending"){
+            if ($all_depo_status == "pending") {
                 $pending_withdrawal_v = $pending_withdrawal_v + $all_with_amount;
             }
-            
-            
-            
         }
     }
-//    echo "<br>Depo id: $depo_id<br>";
-    $sql_t = "UPDATE `users` SET `account_balance`='$account_balance_v', `earned_total`='$total_earnings_v', `total_withdrawal`='$total_withdrawal_v', `last_withdrawal`='$last_withdrawal_v', `pending_withdrawal`='$pending_withdrawal_v', `last_deposit`='$last_investment_v', `total_deposit`='$all_time_investments' WHERE `id`= '$base_id'";    
-                                        if(mysqli_query($link, $sql_t)){
-//                                            echo "<br> updated";
-                                        }
-    
-    
-    
-
-
-
+    //    echo "<br>Depo id: $depo_id<br>";
+    $sql_t = "UPDATE `users` SET `account_balance`='$account_balance_v', `earned_total`='$total_earnings_v', `total_withdrawal`='$total_withdrawal_v', `last_withdrawal`='$last_withdrawal_v', `pending_withdrawal`='$pending_withdrawal_v', `last_deposit`='$last_investment_v', `total_deposit`='$all_time_investments' WHERE `id`= '$base_id'";
+    if (mysqli_query($link, $sql_t)) {
+        //                                            echo "<br> updated";
+    }
 }
 
 ?>
@@ -192,96 +174,89 @@ if(isset($_SESSION['id'])){
 
 
 
- <?php
-if(isset($_SESSION['id'])){   
-    $id= $_SESSION['id'];
-    
-  $sql = "SELECT * FROM `users` WHERE `id` = '$id'" ;
-          if($result = mysqli_query($link, $sql)){
-    if(mysqli_num_rows($result)>0){
-        while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
-            
-                     $id = $row['id'];//
-    $full_name =$row['full_name']; 
-    $username =$row['username']; 
-    $email =$row['email']; 
-    $phone =$row['phone']; 
-    $password =$row['password']; 
-    $country =$row['country']; 
-    $ip_address =$row['ip_address']; 
-    $ref =$row['ref']; 
-    $account_status =$row['account_status']; 
-    $login_count =$row['login_count']; 
-    $registered_at =$row['registered_at']; 
-    $reg_d = explode(' ', $registered_at);   
-    $reg_d =  $reg_d[0];
-    $rd_split = explode('-', $reg_d);
-    $reg_stamp = strtotime($rd_split[1] . '-' . $rd_split[0] . '-' . $rd_split[2] . ' ' . $reg_d[1]);
-//    echo $reg_stamp;
-    $c_time = time();
-    $elapse_time = $reg_stamp + 86400;
-//    $regt_diff = $c_time - $reg_stamp;
-    $regt_diff = $elapse_time - $c_time;
-//    if(($c_time - $reg_stamp) > 86400){
-//        echo "Exceeds";
-//    }else{
-//        echo "Does not exceed";
-//    }
-    $account_balance =$row['account_balance']; 
-    $earned_total =$row['earned_total']; 
-    $total_withdrawal =$row['total_withdrawal']; 
-    $last_withdrawal =$row['last_withdrawal']; 
-    $pending_withdrawal =$row['pending_withdrawal']; 
-    $active_deposit =$row['active_deposit']; 
-    $last_deposit =$row['last_deposit']; 
-    $total_deposit =$row['total_deposit']; 
-    $bitcoin_wallet_address =$row['bitcoin_wallet_address']; 
-//    $ethereum_wallet_address =$row['ethereum_wallet_address']; 
-    $detect_ip =$row['detect_ip']; 
-    $detect_browser =$row['detect_browser']; 
-    $no_of_referals =$row['no_of_referals']; 
-    $active_referals =$row['active_referals']; 
-    $total_referal_commission =$row['total_referal_commission']; 
-    $count_down =$row['count_down']; 
-    $last_seen =$row['last_seen']; 
-    $new_seen = date("M-d-Y h:i:s A", time());
-            
-        $sql_t = "UPDATE `users` SET `last_seen`='$new_seen' WHERE `email`= '$email'";    
-    if(mysqli_query($link, $sql_t)){
-    }
-        
+<?php
+if (isset($_SESSION['id'])) {
+    $id = $_SESSION['id'];
+
+    $sql = "SELECT * FROM `users` WHERE `id` = '$id'";
+    if ($result = mysqli_query($link, $sql)) {
+        if (mysqli_num_rows($result) > 0) {
+            while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+
+                $id = $row['id']; //
+                $full_name = $row['full_name'];
+                $username = $row['username'];
+                $email = $row['email'];
+                $phone = $row['phone'];
+                $password = $row['password'];
+                $country = $row['country'];
+                $ip_address = $row['ip_address'];
+                $ref = $row['ref'];
+                $account_status = $row['account_status'];
+                $login_count = $row['login_count'];
+                $registered_at = $row['registered_at'];
+                $reg_d = explode(' ', $registered_at);
+                $reg_d =  $reg_d[0];
+                $rd_split = explode('-', $reg_d);
+                $reg_stamp = strtotime($rd_split[1] . '-' . $rd_split[0] . '-' . $rd_split[2] . ' ' . $reg_d[1]);
+                //    echo $reg_stamp;
+                $c_time = time();
+                $elapse_time = $reg_stamp + 86400;
+                //    $regt_diff = $c_time - $reg_stamp;
+                $regt_diff = $elapse_time - $c_time;
+                //    if(($c_time - $reg_stamp) > 86400){
+                //        echo "Exceeds";
+                //    }else{
+                //        echo "Does not exceed";
+                //    }
+                $account_balance = $row['account_balance'];
+                $earned_total = $row['earned_total'];
+                $total_withdrawal = $row['total_withdrawal'];
+                $last_withdrawal = $row['last_withdrawal'];
+                $pending_withdrawal = $row['pending_withdrawal'];
+                $active_deposit = $row['active_deposit'];
+                $last_deposit = $row['last_deposit'];
+                $total_deposit = $row['total_deposit'];
+                $bitcoin_wallet_address = $row['bitcoin_wallet_address'];
+                //    $ethereum_wallet_address =$row['ethereum_wallet_address']; 
+                $detect_ip = $row['detect_ip'];
+                $detect_browser = $row['detect_browser'];
+                $no_of_referals = $row['no_of_referals'];
+                $active_referals = $row['active_referals'];
+                $total_referal_commission = $row['total_referal_commission'];
+                $count_down = $row['count_down'];
+                $last_seen = $row['last_seen'];
+                $new_seen = date("M-d-Y h:i:s A", time());
+
+                $sql_t = "UPDATE `users` SET `last_seen`='$new_seen' WHERE `email`= '$email'";
+                if (mysqli_query($link, $sql_t)) {
+                }
+            }
+            //close the result set
+            mysqli_free_result($result);
         }
-        //close the result set
-        mysqli_free_result($result);
-
     }
-}  
-    if($login_count == 0){
-            $new_login_count = $login_count + 1;
-     $sql_t = "UPDATE `users` SET `login_count`='$new_login_count' WHERE `id`= '$id'";    
-                                        if(mysqli_query($link, $sql_t)){
-
-                                        } 
+    if ($login_count == 0) {
+        $new_login_count = $login_count + 1;
+        $sql_t = "UPDATE `users` SET `login_count`='$new_login_count' WHERE `id`= '$id'";
+        if (mysqli_query($link, $sql_t)) {
+        }
     }
-
-    
-    
 }
 
-  $sql = "SELECT * FROM `admin` WHERE `id` = 1" ;
-          if($result = mysqli_query($link, $sql)){
-    if(mysqli_num_rows($result)>0){
-        while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
-    $support_email =$row['support_email']; //
-    $support_phone =$row['support_phone']; //
-        
+$sql = "SELECT * FROM `admin` WHERE `id` = 1";
+if ($result = mysqli_query($link, $sql)) {
+    if (mysqli_num_rows($result) > 0) {
+        while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+            $support_email = $row['support_email']; //
+            $support_phone = $row['support_phone']; //
+
         }
         //close the result set
         mysqli_free_result($result);
-
     }
-}  
-?> 
+}
+?>
 <html lang="en">
 
 <head>
@@ -293,13 +268,20 @@ if(isset($_SESSION['id'])){
     <link rel="stylesheet" href="stylesheets/bootstrap.min.css">
     <link rel="stylesheet" href="stylesheets/owl.carousel.min.css">
     <link rel="stylesheet" href="stylesheets/styles.css">
+    <!-- <link rel="stylesheet" href="stylesheets/translateelement.css"> -->
     <title>AstroFXC</title>
+    <style>
+        .goog-te-combo {
+            padding:2px 10px;
+            border-radius: 5px;
+        }
+    </style>
 
 </head>
 
 <body>
-<!--Start of Tawk.to Script-->
-<!--
+    <!--Start of Tawk.to Script-->
+    <!--
 <script type="text/javascript">
 var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
 (function(){
@@ -312,7 +294,7 @@ s0.parentNode.insertBefore(s1,s0);
 })();
 </script>
 -->
-<!--End of Tawk.to Script-->
+    <!--End of Tawk.to Script-->
     <svg class="svgSprite" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <defs>
             <linearGradient id="linear-gradient-chekmark" x1="235.02" y1="158.14" x2="247.31" y2="158.14" gradientUnits="userSpaceOnUse">
@@ -855,157 +837,156 @@ s0.parentNode.insertBefore(s1,s0);
         </g>
     </svg>
     <div class="modal-bg"></div>
- 
-        
-        
-                 <?php 
-//////////////////////////////////////////////////////////////////////////////////////////////
-        $session_pages = array("account", "deposit_history", "deposit_list", "edit_account", "referals", "security", "withdraw", "promotion", "history");
-        $nonsession_pages = array("about", "index", "partnership", "support", "testimonials");
-        
-//            if(isset($_SESSION['id'])){
-//                include_once("includes/session_includes/base.php"); 
-//            }
-        
-//            echo $session_variable;
-    
-            
-    
-    
-            if(!isset($_GET['page'])){
-             include_once('includes/indexpage.php');   
-            }else{
-                  if(in_array($_GET['page'], $session_pages) || in_array($_GET['page'], $nonsession_pages)){
-                    $link = "includes/" . $_GET['page']. "page.php";
 
-                    if(in_array($_GET['page'], $session_pages)){
-                        $link = "includes/session_includes/" . $_GET['page']. "page.php"; 
-                    include_once("includes/session_includes/base.php");
-                    }
 
-                    if($_GET['page'] == 'deposit' && !isset($_SESSION['id'])){
-                       $link = 'includes/indexpage.php'; 
 
-                    }
+    <?php
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    $session_pages = array("account", "deposit_history", "deposit_list", "edit_account", "referals", "security", "withdraw", "promotion", "history");
+    $nonsession_pages = array("about", "index", "partnership", "support", "testimonials");
 
-                        include_once($link); 
-                    }else{
-                        include_once('includes/indexpage.php'); 
-                    }
+    //            if(isset($_SESSION['id'])){
+    //                include_once("includes/session_includes/base.php"); 
+    //            }
+
+    //            echo $session_variable;
+
+
+
+
+    if (!isset($_GET['page'])) {
+        include_once('includes/indexpage.php');
+    } else {
+        if (in_array($_GET['page'], $session_pages) || in_array($_GET['page'], $nonsession_pages)) {
+            $link = "includes/" . $_GET['page'] . "page.php";
+
+            if (in_array($_GET['page'], $session_pages)) {
+                $link = "includes/session_includes/" . $_GET['page'] . "page.php";
+                include_once("includes/session_includes/base.php");
             }
-            
-            ?>
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        <div class="footer-copyright">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-8 col-sm-7 col-xs-6">
-                        <!--
+
+            if ($_GET['page'] == 'deposit' && !isset($_SESSION['id'])) {
+                $link = 'includes/indexpage.php';
+            }
+
+            include_once($link);
+        } else {
+            include_once('includes/indexpage.php');
+        }
+    }
+
+    ?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div class="footer-copyright">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-sm-7 col-xs-6">
+                    <!--
           <div class="footer-logo"> <img src="styles/img/logo.svg"> <strong></strong> <span></span> </div>
           
           -->
-                    </div>
-                    <div class="col-md-4 col-sm-5 col-xs-6 ">
-                        <div class="social-icon">
-                            <span>Follow Us</span>
-                            <a id="facebook" href="https://www.facebook.com/astrofxc/">
-                                <svg viewBox="0 0 169.17 169.17">
-                                    <use xlink:href="#facebook"></use>
-                                </svg>
-                            </a>
-                            <a id="twitter" href="https://twitter.com/AstroForexpro">
-                                <svg viewBox="0 0 203.24 169.06">
-                                    <use xlink:href="#twitter"></use>
-                                </svg>
-                            </a>
-                            <a id="youtube" href="https://www.youtube.com/user/ReclaimReality">
-                                <svg viewBox="0 0 238.91 169.06">
-                                    <use xlink:href="#youtube"></use>
-                                </svg>
-                            </a>
-                            <a id="instagram" href="https://www.instagram.com/astroforex/">
-                                <svg viewBox="0 0 169.06 169.06">
-                                    <use xlink:href="#instagram"></use>
-                                </svg>
-                            </a>
-                        </div>
-                    </div>
                 </div>
-                <div class="copyright"> <span style="color: #dae7ed;font-size: 10px;">249 GROSVENOR STREET, MAYFAIR, LONDON, ENGLAND, W1K 3HP
-                        <br>
-                        <a target="_blank" href="https://find-and-update.company-information.service.gov.uk/company/08939022">AstroFXC, 08939022</a> </span> <br>
-                    <p>© 2017 AstroFXC Limited. All Rights Reserved. </p>
+                <div class="col-md-4 col-sm-5 col-xs-6 ">
+                    <div class="social-icon">
+                        <span>Follow Us</span>
+                        <a id="facebook" href="https://www.facebook.com/astrofxc/">
+                            <svg viewBox="0 0 169.17 169.17">
+                                <use xlink:href="#facebook"></use>
+                            </svg>
+                        </a>
+                        <a id="twitter" href="https://twitter.com/AstroForexpro">
+                            <svg viewBox="0 0 203.24 169.06">
+                                <use xlink:href="#twitter"></use>
+                            </svg>
+                        </a>
+                        <a id="youtube" href="https://www.youtube.com/user/ReclaimReality">
+                            <svg viewBox="0 0 238.91 169.06">
+                                <use xlink:href="#youtube"></use>
+                            </svg>
+                        </a>
+                        <a id="instagram" href="https://www.instagram.com/astroforex/">
+                            <svg viewBox="0 0 169.06 169.06">
+                                <use xlink:href="#instagram"></use>
+                            </svg>
+                        </a>
+                    </div>
                 </div>
             </div>
+            <div class="copyright"> <span style="color: #dae7ed;font-size: 10px;">249 GROSVENOR STREET, MAYFAIR, LONDON, ENGLAND, W1K 3HP
+                    <br>
+                    <a target="_blank" href="https://find-and-update.company-information.service.gov.uk/company/08939022">AstroFXC, 08939022</a> </span> <br>
+                <p>© 2017 AstroFXC Limited. All Rights Reserved. </p>
+            </div>
         </div>
+    </div>
 
 
 
@@ -1073,7 +1054,6 @@ s0.parentNode.insertBefore(s1,s0);
 
             font-size: 13px;
         }
-
     </style>
 
     <div class="modal-holder">
@@ -1087,9 +1067,10 @@ s0.parentNode.insertBefore(s1,s0);
                 <svg viewBox="0 0 9.99 13.47">
                     <use xlink:href="#loginUserIcon"></use>
                 </svg>
-                Login To Your Account </div>
+                Login To Your Account
+            </div>
             <form method="post" name="mainform" id="login_form">
-<!--
+                <!--
                 <input type="hidden" name="form_id" value="16080211547515">
                 <input type="hidden" name="form_token" value="f8b34e1479c0d31625b117a7ec847c1f">
                 <input type=hidden name=a value='do_login'>
@@ -1113,47 +1094,46 @@ s0.parentNode.insertBefore(s1,s0);
                     <button class="btn btn--blue" id="login_submit">login</button>
                 </div>
                 <div class="account-modal-bottom l_message" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
-<!--                    <div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px"> Registration Successful</div>-->
+                    <!--                    <div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px"> Registration Successful</div>-->
                 </div>
             </form>
-               <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            $("#login_form").submit(function(event) {
-                event.preventDefault();
-                
-                var email = $("#login_email").val();
-                var password = $("#login_password").val();
-                var login_button = $("#login_submit").val();
-                
-//                console.log("email: " + email + " password: " + password );
+            <script>
+                $(document).ready(function() {
+                    $("#login_form").submit(function(event) {
+                        event.preventDefault();
+
+                        var email = $("#login_email").val();
+                        var password = $("#login_password").val();
+                        var login_button = $("#login_submit").val();
+
+                        //                console.log("email: " + email + " password: " + password );
 
 
-                $("#login_submit").html('<b>....</b>');
-                $.ajax({
-                    type: "POST",
-                    url: "phpscripts/login.php/",
-                    data: {
-                        email: email,
-                        password: password,
-                        login_button: login_button
-                    },
-                    success: function(response) {
-                        $(".l_message").html(response);
-                        $("#login_submit").html('LOGIN');
-                    },
-                    error: function(response) {
-                        console.log(response);
-                        $("#login_submit").html('LOGIN');
-                    }
+                        $("#login_submit").html('<b>....</b>');
+                        $.ajax({
+                            type: "POST",
+                            url: "phpscripts/login.php/",
+                            data: {
+                                email: email,
+                                password: password,
+                                login_button: login_button
+                            },
+                            success: function(response) {
+                                $(".l_message").html(response);
+                                $("#login_submit").html('LOGIN');
+                            },
+                            error: function(response) {
+                                console.log(response);
+                                $("#login_submit").html('LOGIN');
+                            }
+                        });
+
+                    });
+
                 });
-
-            });
-
-        });
-
-    </script>
+            </script>
         </div>
 
 
@@ -1167,10 +1147,11 @@ s0.parentNode.insertBefore(s1,s0);
                 <svg viewBox="0 0 15.77 13.47">
                     <use xlink:href="#registerUserIcon"></use>
                 </svg>
-                Create a New Account </div>
-<!--            <iframe name="createaccountrex" src='?a=signup' id="registerIframe" frameborder="0" scrolling="no" onload="resizeIframe($(this))" style="min-height:450px"></iframe>-->
+                Create a New Account
+            </div>
+            <!--            <iframe name="createaccountrex" src='?a=signup' id="registerIframe" frameborder="0" scrolling="no" onload="resizeIframe($(this))" style="min-height:450px"></iframe>-->
             <form method=post name="signup_form" id="signup_form">
-<!--
+                <!--
                 <input type="hidden" name="form_id" value="16080211547515">
                 <input type="hidden" name="form_token" value="f8b34e1479c0d31625b117a7ec847c1f">
                 <input type=hidden name=a value='do_login'>
@@ -1187,267 +1168,266 @@ s0.parentNode.insertBefore(s1,s0);
                     <input type="text" name="register_phone" id="register_phone" value='' style="font-size: 14px;" autofocus placeholder="Phone Number">
                 </div>
                 <style>
-                    
                     select {
                         line-height: 3;
                         background: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>") no-repeat right #ddd;
                         -webkit-appearance: none;
                         background-position-x: auto;
-                                }
+                    }
                 </style>
                 <div class="input-holder-byicon">
                     <label for="country" style="margin-left:10px;color:#A8A8A8">Select Country:</label><br>
-                   <select id="country" class="country_select" name="country" style="height:60px !important;width:inherit !important;font-size:13px !important;padding:0px 15px !important;margin-right:0px !important;border-radius:4px;">
-                       <option value="">Select Your Country</option>
-                       <option value="Afganistan">Afghanistan</option>
-                       <option value="Albania">Albania</option>
-                       <option value="Algeria">Algeria</option>
-                       <option value="American Samoa">American Samoa</option>
-                       <option value="Andorra">Andorra</option>
-                       <option value="Angola">Angola</option>
-                       <option value="Anguilla">Anguilla</option>
-                       <option value="Antigua & Barbuda">Antigua & Barbuda</option>
-                       <option value="Argentina">Argentina</option>
-                       <option value="Armenia">Armenia</option>
-                       <option value="Aruba">Aruba</option>
-                       <option value="Australia">Australia</option>
-                       <option value="Austria">Austria</option>
-                       <option value="Azerbaijan">Azerbaijan</option>
-                       <option value="Bahamas">Bahamas</option>
-                       <option value="Bahrain">Bahrain</option>
-                       <option value="Bangladesh">Bangladesh</option>
-                       <option value="Barbados">Barbados</option>
-                       <option value="Belarus">Belarus</option>
-                       <option value="Belgium">Belgium</option>
-                       <option value="Belize">Belize</option>
-                       <option value="Benin">Benin</option>
-                       <option value="Bermuda">Bermuda</option>
-                       <option value="Bhutan">Bhutan</option>
-                       <option value="Bolivia">Bolivia</option>
-                       <option value="Bonaire">Bonaire</option>
-                       <option value="Bosnia & Herzegovina">Bosnia & Herzegovina</option>
-                       <option value="Botswana">Botswana</option>
-                       <option value="Brazil">Brazil</option>
-                       <option value="British Indian Ocean Ter">British Indian Ocean Ter</option>
-                       <option value="Brunei">Brunei</option>
-                       <option value="Bulgaria">Bulgaria</option>
-                       <option value="Burkina Faso">Burkina Faso</option>
-                       <option value="Burundi">Burundi</option>
-                       <option value="Cambodia">Cambodia</option>
-                       <option value="Cameroon">Cameroon</option>
-                       <option value="Canada">Canada</option>
-                       <option value="Canary Islands">Canary Islands</option>
-                       <option value="Cape Verde">Cape Verde</option>
-                       <option value="Cayman Islands">Cayman Islands</option>
-                       <option value="Central African Republic">Central African Republic</option>
-                       <option value="Chad">Chad</option>
-                       <option value="Channel Islands">Channel Islands</option>
-                       <option value="Chile">Chile</option>
-                       <option value="China">China</option>
-                       <option value="Christmas Island">Christmas Island</option>
-                       <option value="Cocos Island">Cocos Island</option>
-                       <option value="Colombia">Colombia</option>
-                       <option value="Comoros">Comoros</option>
-                       <option value="Congo">Congo</option>
-                       <option value="Cook Islands">Cook Islands</option>
-                       <option value="Costa Rica">Costa Rica</option>
-                       <option value="Cote DIvoire">Cote DIvoire</option>
-                       <option value="Croatia">Croatia</option>
-                       <option value="Cuba">Cuba</option>
-                       <option value="Curaco">Curacao</option>
-                       <option value="Cyprus">Cyprus</option>
-                       <option value="Czech Republic">Czech Republic</option>
-                       <option value="Denmark">Denmark</option>
-                       <option value="Djibouti">Djibouti</option>
-                       <option value="Dominica">Dominica</option>
-                       <option value="Dominican Republic">Dominican Republic</option>
-                       <option value="East Timor">East Timor</option>
-                       <option value="Ecuador">Ecuador</option>
-                       <option value="Egypt">Egypt</option>
-                       <option value="El Salvador">El Salvador</option>
-                       <option value="Equatorial Guinea">Equatorial Guinea</option>
-                       <option value="Eritrea">Eritrea</option>
-                       <option value="Estonia">Estonia</option>
-                       <option value="Ethiopia">Ethiopia</option>
-                       <option value="Falkland Islands">Falkland Islands</option>
-                       <option value="Faroe Islands">Faroe Islands</option>
-                       <option value="Fiji">Fiji</option>
-                       <option value="Finland">Finland</option>
-                       <option value="France">France</option>
-                       <option value="French Guiana">French Guiana</option>
-                       <option value="French Polynesia">French Polynesia</option>
-                       <option value="French Southern Ter">French Southern Ter</option>
-                       <option value="Gabon">Gabon</option>
-                       <option value="Gambia">Gambia</option>
-                       <option value="Georgia">Georgia</option>
-                       <option value="Germany">Germany</option>
-                       <option value="Ghana">Ghana</option>
-                       <option value="Gibraltar">Gibraltar</option>
-                       <option value="Great Britain">Great Britain</option>
-                       <option value="Greece">Greece</option>
-                       <option value="Greenland">Greenland</option>
-                       <option value="Grenada">Grenada</option>
-                       <option value="Guadeloupe">Guadeloupe</option>
-                       <option value="Guam">Guam</option>
-                       <option value="Guatemala">Guatemala</option>
-                       <option value="Guinea">Guinea</option>
-                       <option value="Guyana">Guyana</option>
-                       <option value="Haiti">Haiti</option>
-                       <option value="Hawaii">Hawaii</option>
-                       <option value="Honduras">Honduras</option>
-                       <option value="Hong Kong">Hong Kong</option>
-                       <option value="Hungary">Hungary</option>
-                       <option value="Iceland">Iceland</option>
-                       <option value="Indonesia">Indonesia</option>
-                       <option value="India">India</option>
-                       <option value="Iran">Iran</option>
-                       <option value="Iraq">Iraq</option>
-                       <option value="Ireland">Ireland</option>
-                       <option value="Isle of Man">Isle of Man</option>
-                       <option value="Israel">Israel</option>
-                       <option value="Italy">Italy</option>
-                       <option value="Jamaica">Jamaica</option>
-                       <option value="Japan">Japan</option>
-                       <option value="Jordan">Jordan</option>
-                       <option value="Kazakhstan">Kazakhstan</option>
-                       <option value="Kenya">Kenya</option>
-                       <option value="Kiribati">Kiribati</option>
-                       <option value="Korea North">Korea North</option>
-                       <option value="Korea Sout">Korea South</option>
-                       <option value="Kuwait">Kuwait</option>
-                       <option value="Kyrgyzstan">Kyrgyzstan</option>
-                       <option value="Laos">Laos</option>
-                       <option value="Latvia">Latvia</option>
-                       <option value="Lebanon">Lebanon</option>
-                       <option value="Lesotho">Lesotho</option>
-                       <option value="Liberia">Liberia</option>
-                       <option value="Libya">Libya</option>
-                       <option value="Liechtenstein">Liechtenstein</option>
-                       <option value="Lithuania">Lithuania</option>
-                       <option value="Luxembourg">Luxembourg</option>
-                       <option value="Macau">Macau</option>
-                       <option value="Macedonia">Macedonia</option>
-                       <option value="Madagascar">Madagascar</option>
-                       <option value="Malaysia">Malaysia</option>
-                       <option value="Malawi">Malawi</option>
-                       <option value="Maldives">Maldives</option>
-                       <option value="Mali">Mali</option>
-                       <option value="Malta">Malta</option>
-                       <option value="Marshall Islands">Marshall Islands</option>
-                       <option value="Martinique">Martinique</option>
-                       <option value="Mauritania">Mauritania</option>
-                       <option value="Mauritius">Mauritius</option>
-                       <option value="Mayotte">Mayotte</option>
-                       <option value="Mexico">Mexico</option>
-                       <option value="Midway Islands">Midway Islands</option>
-                       <option value="Moldova">Moldova</option>
-                       <option value="Monaco">Monaco</option>
-                       <option value="Mongolia">Mongolia</option>
-                       <option value="Montserrat">Montserrat</option>
-                       <option value="Morocco">Morocco</option>
-                       <option value="Mozambique">Mozambique</option>
-                       <option value="Myanmar">Myanmar</option>
-                       <option value="Nambia">Nambia</option>
-                       <option value="Nauru">Nauru</option>
-                       <option value="Nepal">Nepal</option>
-                       <option value="Netherland Antilles">Netherland Antilles</option>
-                       <option value="Netherlands">Netherlands (Holland, Europe)</option>
-                       <option value="Nevis">Nevis</option>
-                       <option value="New Caledonia">New Caledonia</option>
-                       <option value="New Zealand">New Zealand</option>
-                       <option value="Nicaragua">Nicaragua</option>
-                       <option value="Niger">Niger</option>
-                       <option value="Nigeria">Nigeria</option>
-                       <option value="Niue">Niue</option>
-                       <option value="Norfolk Island">Norfolk Island</option>
-                       <option value="Norway">Norway</option>
-                       <option value="Oman">Oman</option>
-                       <option value="Pakistan">Pakistan</option>
-                       <option value="Palau Island">Palau Island</option>
-                       <option value="Palestine">Palestine</option>
-                       <option value="Panama">Panama</option>
-                       <option value="Papua New Guinea">Papua New Guinea</option>
-                       <option value="Paraguay">Paraguay</option>
-                       <option value="Peru">Peru</option>
-                       <option value="Phillipines">Philippines</option>
-                       <option value="Pitcairn Island">Pitcairn Island</option>
-                       <option value="Poland">Poland</option>
-                       <option value="Portugal">Portugal</option>
-                       <option value="Puerto Rico">Puerto Rico</option>
-                       <option value="Qatar">Qatar</option>
-                       <option value="Republic of Montenegro">Republic of Montenegro</option>
-                       <option value="Republic of Serbia">Republic of Serbia</option>
-                       <option value="Reunion">Reunion</option>
-                       <option value="Romania">Romania</option>
-                       <option value="Russia">Russia</option>
-                       <option value="Rwanda">Rwanda</option>
-                       <option value="St Barthelemy">St Barthelemy</option>
-                       <option value="St Eustatius">St Eustatius</option>
-                       <option value="St Helena">St Helena</option>
-                       <option value="St Kitts-Nevis">St Kitts-Nevis</option>
-                       <option value="St Lucia">St Lucia</option>
-                       <option value="St Maarten">St Maarten</option>
-                       <option value="St Pierre & Miquelon">St Pierre & Miquelon</option>
-                       <option value="St Vincent & Grenadines">St Vincent & Grenadines</option>
-                       <option value="Saipan">Saipan</option>
-                       <option value="Samoa">Samoa</option>
-                       <option value="Samoa American">Samoa American</option>
-                       <option value="San Marino">San Marino</option>
-                       <option value="Sao Tome & Principe">Sao Tome & Principe</option>
-                       <option value="Saudi Arabia">Saudi Arabia</option>
-                       <option value="Senegal">Senegal</option>
-                       <option value="Seychelles">Seychelles</option>
-                       <option value="Sierra Leone">Sierra Leone</option>
-                       <option value="Singapore">Singapore</option>
-                       <option value="Slovakia">Slovakia</option>
-                       <option value="Slovenia">Slovenia</option>
-                       <option value="Solomon Islands">Solomon Islands</option>
-                       <option value="Somalia">Somalia</option>
-                       <option value="South Africa">South Africa</option>
-                       <option value="Spain">Spain</option>
-                       <option value="Sri Lanka">Sri Lanka</option>
-                       <option value="Sudan">Sudan</option>
-                       <option value="Suriname">Suriname</option>
-                       <option value="Swaziland">Swaziland</option>
-                       <option value="Sweden">Sweden</option>
-                       <option value="Switzerland">Switzerland</option>
-                       <option value="Syria">Syria</option>
-                       <option value="Tahiti">Tahiti</option>
-                       <option value="Taiwan">Taiwan</option>
-                       <option value="Tajikistan">Tajikistan</option>
-                       <option value="Tanzania">Tanzania</option>
-                       <option value="Thailand">Thailand</option>
-                       <option value="Togo">Togo</option>
-                       <option value="Tokelau">Tokelau</option>
-                       <option value="Tonga">Tonga</option>
-                       <option value="Trinidad & Tobago">Trinidad & Tobago</option>
-                       <option value="Tunisia">Tunisia</option>
-                       <option value="Turkey">Turkey</option>
-                       <option value="Turkmenistan">Turkmenistan</option>
-                       <option value="Turks & Caicos Is">Turks & Caicos Is</option>
-                       <option value="Tuvalu">Tuvalu</option>
-                       <option value="Uganda">Uganda</option>
-                       <option value="United Kingdom">United Kingdom</option>
-                       <option value="Ukraine">Ukraine</option>
-                       <option value="United Arab Erimates">United Arab Emirates</option>
-                       <option value="United States of America">United States of America</option>
-                       <option value="Uraguay">Uruguay</option>
-                       <option value="Uzbekistan">Uzbekistan</option>
-                       <option value="Vanuatu">Vanuatu</option>
-                       <option value="Vatican City State">Vatican City State</option>
-                       <option value="Venezuela">Venezuela</option>
-                       <option value="Vietnam">Vietnam</option>
-                       <option value="Virgin Islands (Brit)">Virgin Islands (Brit)</option>
-                       <option value="Virgin Islands (USA)">Virgin Islands (USA)</option>
-                       <option value="Wake Island">Wake Island</option>
-                       <option value="Wallis & Futana Is">Wallis & Futana Is</option>
-                       <option value="Yemen">Yemen</option>
-                       <option value="Zaire">Zaire</option>
-                       <option value="Zambia">Zambia</option>
-                       <option value="Zimbabwe">Zimbabwe</option>
+                    <select id="country" class="country_select" name="country" style="height:60px !important;width:inherit !important;font-size:13px !important;padding:0px 15px !important;margin-right:0px !important;border-radius:4px;">
+                        <option value="">Select Your Country</option>
+                        <option value="Afganistan">Afghanistan</option>
+                        <option value="Albania">Albania</option>
+                        <option value="Algeria">Algeria</option>
+                        <option value="American Samoa">American Samoa</option>
+                        <option value="Andorra">Andorra</option>
+                        <option value="Angola">Angola</option>
+                        <option value="Anguilla">Anguilla</option>
+                        <option value="Antigua & Barbuda">Antigua & Barbuda</option>
+                        <option value="Argentina">Argentina</option>
+                        <option value="Armenia">Armenia</option>
+                        <option value="Aruba">Aruba</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Austria">Austria</option>
+                        <option value="Azerbaijan">Azerbaijan</option>
+                        <option value="Bahamas">Bahamas</option>
+                        <option value="Bahrain">Bahrain</option>
+                        <option value="Bangladesh">Bangladesh</option>
+                        <option value="Barbados">Barbados</option>
+                        <option value="Belarus">Belarus</option>
+                        <option value="Belgium">Belgium</option>
+                        <option value="Belize">Belize</option>
+                        <option value="Benin">Benin</option>
+                        <option value="Bermuda">Bermuda</option>
+                        <option value="Bhutan">Bhutan</option>
+                        <option value="Bolivia">Bolivia</option>
+                        <option value="Bonaire">Bonaire</option>
+                        <option value="Bosnia & Herzegovina">Bosnia & Herzegovina</option>
+                        <option value="Botswana">Botswana</option>
+                        <option value="Brazil">Brazil</option>
+                        <option value="British Indian Ocean Ter">British Indian Ocean Ter</option>
+                        <option value="Brunei">Brunei</option>
+                        <option value="Bulgaria">Bulgaria</option>
+                        <option value="Burkina Faso">Burkina Faso</option>
+                        <option value="Burundi">Burundi</option>
+                        <option value="Cambodia">Cambodia</option>
+                        <option value="Cameroon">Cameroon</option>
+                        <option value="Canada">Canada</option>
+                        <option value="Canary Islands">Canary Islands</option>
+                        <option value="Cape Verde">Cape Verde</option>
+                        <option value="Cayman Islands">Cayman Islands</option>
+                        <option value="Central African Republic">Central African Republic</option>
+                        <option value="Chad">Chad</option>
+                        <option value="Channel Islands">Channel Islands</option>
+                        <option value="Chile">Chile</option>
+                        <option value="China">China</option>
+                        <option value="Christmas Island">Christmas Island</option>
+                        <option value="Cocos Island">Cocos Island</option>
+                        <option value="Colombia">Colombia</option>
+                        <option value="Comoros">Comoros</option>
+                        <option value="Congo">Congo</option>
+                        <option value="Cook Islands">Cook Islands</option>
+                        <option value="Costa Rica">Costa Rica</option>
+                        <option value="Cote DIvoire">Cote DIvoire</option>
+                        <option value="Croatia">Croatia</option>
+                        <option value="Cuba">Cuba</option>
+                        <option value="Curaco">Curacao</option>
+                        <option value="Cyprus">Cyprus</option>
+                        <option value="Czech Republic">Czech Republic</option>
+                        <option value="Denmark">Denmark</option>
+                        <option value="Djibouti">Djibouti</option>
+                        <option value="Dominica">Dominica</option>
+                        <option value="Dominican Republic">Dominican Republic</option>
+                        <option value="East Timor">East Timor</option>
+                        <option value="Ecuador">Ecuador</option>
+                        <option value="Egypt">Egypt</option>
+                        <option value="El Salvador">El Salvador</option>
+                        <option value="Equatorial Guinea">Equatorial Guinea</option>
+                        <option value="Eritrea">Eritrea</option>
+                        <option value="Estonia">Estonia</option>
+                        <option value="Ethiopia">Ethiopia</option>
+                        <option value="Falkland Islands">Falkland Islands</option>
+                        <option value="Faroe Islands">Faroe Islands</option>
+                        <option value="Fiji">Fiji</option>
+                        <option value="Finland">Finland</option>
+                        <option value="France">France</option>
+                        <option value="French Guiana">French Guiana</option>
+                        <option value="French Polynesia">French Polynesia</option>
+                        <option value="French Southern Ter">French Southern Ter</option>
+                        <option value="Gabon">Gabon</option>
+                        <option value="Gambia">Gambia</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Germany">Germany</option>
+                        <option value="Ghana">Ghana</option>
+                        <option value="Gibraltar">Gibraltar</option>
+                        <option value="Great Britain">Great Britain</option>
+                        <option value="Greece">Greece</option>
+                        <option value="Greenland">Greenland</option>
+                        <option value="Grenada">Grenada</option>
+                        <option value="Guadeloupe">Guadeloupe</option>
+                        <option value="Guam">Guam</option>
+                        <option value="Guatemala">Guatemala</option>
+                        <option value="Guinea">Guinea</option>
+                        <option value="Guyana">Guyana</option>
+                        <option value="Haiti">Haiti</option>
+                        <option value="Hawaii">Hawaii</option>
+                        <option value="Honduras">Honduras</option>
+                        <option value="Hong Kong">Hong Kong</option>
+                        <option value="Hungary">Hungary</option>
+                        <option value="Iceland">Iceland</option>
+                        <option value="Indonesia">Indonesia</option>
+                        <option value="India">India</option>
+                        <option value="Iran">Iran</option>
+                        <option value="Iraq">Iraq</option>
+                        <option value="Ireland">Ireland</option>
+                        <option value="Isle of Man">Isle of Man</option>
+                        <option value="Israel">Israel</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Jamaica">Jamaica</option>
+                        <option value="Japan">Japan</option>
+                        <option value="Jordan">Jordan</option>
+                        <option value="Kazakhstan">Kazakhstan</option>
+                        <option value="Kenya">Kenya</option>
+                        <option value="Kiribati">Kiribati</option>
+                        <option value="Korea North">Korea North</option>
+                        <option value="Korea Sout">Korea South</option>
+                        <option value="Kuwait">Kuwait</option>
+                        <option value="Kyrgyzstan">Kyrgyzstan</option>
+                        <option value="Laos">Laos</option>
+                        <option value="Latvia">Latvia</option>
+                        <option value="Lebanon">Lebanon</option>
+                        <option value="Lesotho">Lesotho</option>
+                        <option value="Liberia">Liberia</option>
+                        <option value="Libya">Libya</option>
+                        <option value="Liechtenstein">Liechtenstein</option>
+                        <option value="Lithuania">Lithuania</option>
+                        <option value="Luxembourg">Luxembourg</option>
+                        <option value="Macau">Macau</option>
+                        <option value="Macedonia">Macedonia</option>
+                        <option value="Madagascar">Madagascar</option>
+                        <option value="Malaysia">Malaysia</option>
+                        <option value="Malawi">Malawi</option>
+                        <option value="Maldives">Maldives</option>
+                        <option value="Mali">Mali</option>
+                        <option value="Malta">Malta</option>
+                        <option value="Marshall Islands">Marshall Islands</option>
+                        <option value="Martinique">Martinique</option>
+                        <option value="Mauritania">Mauritania</option>
+                        <option value="Mauritius">Mauritius</option>
+                        <option value="Mayotte">Mayotte</option>
+                        <option value="Mexico">Mexico</option>
+                        <option value="Midway Islands">Midway Islands</option>
+                        <option value="Moldova">Moldova</option>
+                        <option value="Monaco">Monaco</option>
+                        <option value="Mongolia">Mongolia</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Morocco">Morocco</option>
+                        <option value="Mozambique">Mozambique</option>
+                        <option value="Myanmar">Myanmar</option>
+                        <option value="Nambia">Nambia</option>
+                        <option value="Nauru">Nauru</option>
+                        <option value="Nepal">Nepal</option>
+                        <option value="Netherland Antilles">Netherland Antilles</option>
+                        <option value="Netherlands">Netherlands (Holland, Europe)</option>
+                        <option value="Nevis">Nevis</option>
+                        <option value="New Caledonia">New Caledonia</option>
+                        <option value="New Zealand">New Zealand</option>
+                        <option value="Nicaragua">Nicaragua</option>
+                        <option value="Niger">Niger</option>
+                        <option value="Nigeria">Nigeria</option>
+                        <option value="Niue">Niue</option>
+                        <option value="Norfolk Island">Norfolk Island</option>
+                        <option value="Norway">Norway</option>
+                        <option value="Oman">Oman</option>
+                        <option value="Pakistan">Pakistan</option>
+                        <option value="Palau Island">Palau Island</option>
+                        <option value="Palestine">Palestine</option>
+                        <option value="Panama">Panama</option>
+                        <option value="Papua New Guinea">Papua New Guinea</option>
+                        <option value="Paraguay">Paraguay</option>
+                        <option value="Peru">Peru</option>
+                        <option value="Phillipines">Philippines</option>
+                        <option value="Pitcairn Island">Pitcairn Island</option>
+                        <option value="Poland">Poland</option>
+                        <option value="Portugal">Portugal</option>
+                        <option value="Puerto Rico">Puerto Rico</option>
+                        <option value="Qatar">Qatar</option>
+                        <option value="Republic of Montenegro">Republic of Montenegro</option>
+                        <option value="Republic of Serbia">Republic of Serbia</option>
+                        <option value="Reunion">Reunion</option>
+                        <option value="Romania">Romania</option>
+                        <option value="Russia">Russia</option>
+                        <option value="Rwanda">Rwanda</option>
+                        <option value="St Barthelemy">St Barthelemy</option>
+                        <option value="St Eustatius">St Eustatius</option>
+                        <option value="St Helena">St Helena</option>
+                        <option value="St Kitts-Nevis">St Kitts-Nevis</option>
+                        <option value="St Lucia">St Lucia</option>
+                        <option value="St Maarten">St Maarten</option>
+                        <option value="St Pierre & Miquelon">St Pierre & Miquelon</option>
+                        <option value="St Vincent & Grenadines">St Vincent & Grenadines</option>
+                        <option value="Saipan">Saipan</option>
+                        <option value="Samoa">Samoa</option>
+                        <option value="Samoa American">Samoa American</option>
+                        <option value="San Marino">San Marino</option>
+                        <option value="Sao Tome & Principe">Sao Tome & Principe</option>
+                        <option value="Saudi Arabia">Saudi Arabia</option>
+                        <option value="Senegal">Senegal</option>
+                        <option value="Seychelles">Seychelles</option>
+                        <option value="Sierra Leone">Sierra Leone</option>
+                        <option value="Singapore">Singapore</option>
+                        <option value="Slovakia">Slovakia</option>
+                        <option value="Slovenia">Slovenia</option>
+                        <option value="Solomon Islands">Solomon Islands</option>
+                        <option value="Somalia">Somalia</option>
+                        <option value="South Africa">South Africa</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Sri Lanka">Sri Lanka</option>
+                        <option value="Sudan">Sudan</option>
+                        <option value="Suriname">Suriname</option>
+                        <option value="Swaziland">Swaziland</option>
+                        <option value="Sweden">Sweden</option>
+                        <option value="Switzerland">Switzerland</option>
+                        <option value="Syria">Syria</option>
+                        <option value="Tahiti">Tahiti</option>
+                        <option value="Taiwan">Taiwan</option>
+                        <option value="Tajikistan">Tajikistan</option>
+                        <option value="Tanzania">Tanzania</option>
+                        <option value="Thailand">Thailand</option>
+                        <option value="Togo">Togo</option>
+                        <option value="Tokelau">Tokelau</option>
+                        <option value="Tonga">Tonga</option>
+                        <option value="Trinidad & Tobago">Trinidad & Tobago</option>
+                        <option value="Tunisia">Tunisia</option>
+                        <option value="Turkey">Turkey</option>
+                        <option value="Turkmenistan">Turkmenistan</option>
+                        <option value="Turks & Caicos Is">Turks & Caicos Is</option>
+                        <option value="Tuvalu">Tuvalu</option>
+                        <option value="Uganda">Uganda</option>
+                        <option value="United Kingdom">United Kingdom</option>
+                        <option value="Ukraine">Ukraine</option>
+                        <option value="United Arab Erimates">United Arab Emirates</option>
+                        <option value="United States of America">United States of America</option>
+                        <option value="Uraguay">Uruguay</option>
+                        <option value="Uzbekistan">Uzbekistan</option>
+                        <option value="Vanuatu">Vanuatu</option>
+                        <option value="Vatican City State">Vatican City State</option>
+                        <option value="Venezuela">Venezuela</option>
+                        <option value="Vietnam">Vietnam</option>
+                        <option value="Virgin Islands (Brit)">Virgin Islands (Brit)</option>
+                        <option value="Virgin Islands (USA)">Virgin Islands (USA)</option>
+                        <option value="Wake Island">Wake Island</option>
+                        <option value="Wallis & Futana Is">Wallis & Futana Is</option>
+                        <option value="Yemen">Yemen</option>
+                        <option value="Zaire">Zaire</option>
+                        <option value="Zambia">Zambia</option>
+                        <option value="Zimbabwe">Zimbabwe</option>
                     </select>
                 </div>
-                     
+
                 <div class="input-holder-byicon">
                     <input type="text" name="email" id="register_email" value='' style="font-size: 14px;" autofocus placeholder="E-mail Address">
                 </div>
@@ -1460,95 +1440,97 @@ s0.parentNode.insertBefore(s1,s0);
                 <div class="input-holder-byicon">
                     <input type="password" name="password2" id="register_password2" value='' style="font-size: 14px;" placeholder="Confirm Password">
                 </div>
-                <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin-top: 40px;text-align:center ">Referred by <b style="text-decoration: underline;margin-left: 5px;"> <?php if(isset($_GET['ref'])){
-    echo $_GET['ref'];}else{ echo "n/a";} ?></b></div>
+                <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin-top: 40px;text-align:center ">Referred by <b style="text-decoration: underline;margin-left: 5px;"> <?php if (isset($_GET['ref'])) {
+                                                                                                                                                                                                                    echo $_GET['ref'];
+                                                                                                                                                                                                                } else {
+                                                                                                                                                                                                                    echo "n/a";
+                                                                                                                                                                                                                } ?></b></div>
                 <input type="hidden" id="register_ref" value="<?php
-                                            if(isset($_GET['ref'])){
-                                                echo $_GET['ref'];
-                                            }else{
-                                                echo '';
-                                            }
-                                            ?>">
-                
+                                                                if (isset($_GET['ref'])) {
+                                                                    echo $_GET['ref'];
+                                                                } else {
+                                                                    echo '';
+                                                                }
+                                                                ?>">
+
                 <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin-top: 40px;text-align:center ">Already have an Account? <a id="loginNowBtn" style="text-decoration: underline;margin-left: 5px;"><b>Login Here</b></a></div>
-                
+
                 <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
-		<button class="btn btn--blue register-btn" style="text-decoration:none" id="register_submit"> <span>Register your account</span>
-				<div class="spinner" style="display:block">
-					<div class="bounce1"></div>
-					<div class="bounce2"></div>
-					<div class="bounce3"></div>
-				</div>
-			</button>
-		</div>
-                <div class="account-modal-bottom r_message" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
-<!--                    <div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px"> Registration Successful</div>-->
+                    <button class="btn btn--blue register-btn" style="text-decoration:none" id="register_submit"> <span>Register your account</span>
+                        <div class="spinner" style="display:block">
+                            <div class="bounce1"></div>
+                            <div class="bounce2"></div>
+                            <div class="bounce3"></div>
+                        </div>
+                    </button>
                 </div>
-                    
-                
-                
-<!--
+                <div class="account-modal-bottom r_message" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
+                    <!--                    <div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px"> Registration Successful</div>-->
+                </div>
+
+
+
+                <!--
                 <a id="forgotNowBtn" style="cursor:pointer" onclick="openModal('forgot-modal')">Forgot your password? Click here.</a>
                 <div class="account-modal-bottom"> Don't have an account? <a id="registerNowBtn" class="register-btn pointer">Create an account.</a>
                     <button class="btn btn--blue">login</button>
                 </div>
 -->
             </form>
-               <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            $("#signup_form").submit(function(event) {
-                event.preventDefault();
-//
-                var ref = $("#register_ref").val();
-                var full_name = $("#register_full_name").val();
-                var username = $("#register_username").val();
-                var email = $("#register_email").val();
-                var country = $("#country").val();
-                var email1 = $("#register_email2").val();
-                var password = $("#register_password").val();
-                var password2 = $("#register_password2").val();
-                var phone = $("#register_phone").val();
-                var create_button = $("#register_submit").val();
-//                var agree = $('#agree').is(":checked");  
-//                console.log("ref: " + ref + " full_name: " + full_name + " username: " + username +" country: " + country + " email: " + email + " email1: " + email1 + " password: " + password + " password2: " + password2 + " phone: " + phone + " create_button: " + create_button)
+            <script>
+                $(document).ready(function() {
+                    $("#signup_form").submit(function(event) {
+                        event.preventDefault();
+                        //
+                        var ref = $("#register_ref").val();
+                        var full_name = $("#register_full_name").val();
+                        var username = $("#register_username").val();
+                        var email = $("#register_email").val();
+                        var country = $("#country").val();
+                        var email1 = $("#register_email2").val();
+                        var password = $("#register_password").val();
+                        var password2 = $("#register_password2").val();
+                        var phone = $("#register_phone").val();
+                        var create_button = $("#register_submit").val();
+                        //                var agree = $('#agree').is(":checked");  
+                        //                console.log("ref: " + ref + " full_name: " + full_name + " username: " + username +" country: " + country + " email: " + email + " email1: " + email1 + " password: " + password + " password2: " + password2 + " phone: " + phone + " create_button: " + create_button)
 
 
-//                $("#new-password--js").val('');
-                $("#register_submit").html('<b>....</b>');
-                $.ajax({
-                    type: "POST",
-                    url: "phpscripts/signup.php/",
-                    data: {
-                        ref: ref,
-                        full_name: full_name,
-                        username: username,
-                        country: country,
-                        email: email,
-                        email1: email1,
-                        password: password,
-                        password2: password2,
-                        phone: phone,
-                        create_button: create_button
-                    },
-                    success: function(response) {
-                        $(".r_message").html(response);
-                        //      console.log(response);
-                        //      console.log("Done"); 
-                        $("#register_submit").html('Register your account');
-                    },
-                    error: function(response) {
-                        console.log(response);
-                        $("#register_submit").html('Register your account');
-                    }
+                        //                $("#new-password--js").val('');
+                        $("#register_submit").html('<b>....</b>');
+                        $.ajax({
+                            type: "POST",
+                            url: "phpscripts/signup.php/",
+                            data: {
+                                ref: ref,
+                                full_name: full_name,
+                                username: username,
+                                country: country,
+                                email: email,
+                                email1: email1,
+                                password: password,
+                                password2: password2,
+                                phone: phone,
+                                create_button: create_button
+                            },
+                            success: function(response) {
+                                $(".r_message").html(response);
+                                //      console.log(response);
+                                //      console.log("Done"); 
+                                $("#register_submit").html('Register your account');
+                            },
+                            error: function(response) {
+                                console.log(response);
+                                $("#register_submit").html('Register your account');
+                            }
+                        });
+
+                    });
+
                 });
-
-            });
-
-        });
-
-    </script>
+            </script>
 
         </div>
 
@@ -1564,165 +1546,169 @@ s0.parentNode.insertBefore(s1,s0);
                 <svg viewBox="0 0 15.77 13.47">
                     <use xlink:href="#registerUserIcon"></use>
                 </svg>
-                Forgot Password </div>
-<!--            <iframe name="forgotpass" src="?a=forgot_password" id="forgotIframe" frameborder="0" scrolling="no" onload="resizeIframe($(this))" style="min-height:250px"></iframe>-->
+                Forgot Password
+            </div>
+            <!--            <iframe name="forgotpass" src="?a=forgot_password" id="forgotIframe" frameborder="0" scrolling="no" onload="resizeIframe($(this))" style="min-height:250px"></iframe>-->
             <form method="post" name="forgotform" id="forgot_password1" target="forgotpass">
-<!--
+                <!--
                 <input type="hidden" name="form_id" value="16081205908176">
                 <input type="hidden" name="form_token" value="e36b8424555d05162d905c443dc5cc18">
         <input type="hidden" name="a" value="forgot_password">
         <input type="hidden" name="action" value="forgot_password">
 -->
-        <div class="input-holder-byicon">
-            <input type="text" name="email" id="forgot_email" value="" placeholder="Type your E-mail" style="padding-right:100px">
-            <!----
+                <div class="input-holder-byicon">
+                    <input type="text" name="email" id="forgot_email" value="" placeholder="Type your E-mail" style="padding-right:100px">
+                    <!----
     <a class="red-gradient pointer" onclick="populateform()" style="position: absolute;right: 10px;top: calc((100% - 30px)/2);color: #fff;padding: 5px 10px;border-radius: 5px;">Generate</a>
 ---->
-        </div>
-        
-        <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin-top: 40px;display: flex;justify-content: center; ">
-            <button class="btn btn--blue register-btn" style="text-decoration:none" id="forgot_submit1"> <span>Forgot Password</span>
-                <div class="spinner" style="display:none">
-                    <div class="bounce1"></div>
-                    <div class="bounce2"></div>
-                    <div class="bounce3"></div>
                 </div>
-            </button>
-        </div>
+
+                <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin-top: 40px;display: flex;justify-content: center; ">
+                    <button class="btn btn--blue register-btn" style="text-decoration:none" id="forgot_submit1"> <span>Forgot Password</span>
+                        <div class="spinner" style="display:none">
+                            <div class="bounce1"></div>
+                            <div class="bounce2"></div>
+                            <div class="bounce3"></div>
+                        </div>
+                    </button>
+                </div>
                 <div class="input-row fo1_message" style="padding: 0px !important; margin: 25px auto !important;text-align: center;display: flex;justify-content: center; ">
-<!--                    <div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px"> Registration Successful</div>-->
+                    <!--                    <div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px"> Registration Successful</div>-->
                 </div>
-    </form>
-                               <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+            </form>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            $("#forgot_password1").submit(function(event) {
-                event.preventDefault();
-                
-
-                var email = $("#forgot_email").val();
-                var forgot_submit1 = $("#forgot_submit1").val();
-                
-                console.log("forgot_email: " + email );
+            <script>
+                $(document).ready(function() {
+                    $("#forgot_password1").submit(function(event) {
+                        event.preventDefault();
 
 
-//                $("#new-password--js").val('');
-                $("#forgot_submit1").html('<b>....</b>');
-                $.ajax({
-                    type: "POST",
-                    url: "phpscripts/forgot_password.php/",
-                    data: {
-                        email: email,
-                        forgot_submit1: forgot_submit1
-                    },
-                    success: function(response) {
-                        $(".fo1_message").html(response);
-                        //      console.log(response);
-                        //      console.log("Done"); 
-                        $("#forgot_submit1").html('Forgot Password');
-                    },
-                    error: function(response) {
-                        console.log(response);
-                        $("#forgot_submit1").html('Forgot Password');
-                    }
+                        var email = $("#forgot_email").val();
+                        var forgot_submit1 = $("#forgot_submit1").val();
+
+                        console.log("forgot_email: " + email);
+
+
+                        //                $("#new-password--js").val('');
+                        $("#forgot_submit1").html('<b>....</b>');
+                        $.ajax({
+                            type: "POST",
+                            url: "phpscripts/forgot_password.php/",
+                            data: {
+                                email: email,
+                                forgot_submit1: forgot_submit1
+                            },
+                            success: function(response) {
+                                $(".fo1_message").html(response);
+                                //      console.log(response);
+                                //      console.log("Done"); 
+                                $("#forgot_submit1").html('Forgot Password');
+                            },
+                            error: function(response) {
+                                console.log(response);
+                                $("#forgot_submit1").html('Forgot Password');
+                            }
+                        });
+
+                    });
+
                 });
-
-            });
-
-        });
-
-    </script>
+            </script>
         </div>
-        
-        
+
+
         <div class="modal-general forgot-modal2">
             <button class="modal-close">
                 <svg viewBox="0 0 11.58 11.58">
                     <use xlink:href="#closeIcon"></use>
                 </svg>
             </button>
-            
+
             <div class="modal-title">
                 <svg viewBox="0 0 15.77 13.47">
                     <use xlink:href="#registerUserIcon"></use>
                 </svg>
-                Forgot Password </div>
-<!--            <iframe name="forgotpass" src="?a=forgot_password" id="forgotIframe" frameborder="0" scrolling="no" onload="resizeIframe($(this))" style="min-height:250px"></iframe>-->
+                Forgot Password
+            </div>
+            <!--            <iframe name="forgotpass" src="?a=forgot_password" id="forgotIframe" frameborder="0" scrolling="no" onload="resizeIframe($(this))" style="min-height:250px"></iframe>-->
             <form method="post" name="forgotform" id="forgot_password2" target="forgotpass">
-                
-        <div class="input-holder-byicon">
-            <input type="password" name="forgot_password" id="forgot_password" value="" placeholder="Type your New Password" style="padding-right:100px">
-        </div>  
-                
-        <div class="input-holder-byicon">
-            <input type="password" name="forgot_password4" id="forgot_password4" value="" placeholder="Confirm Password" style="padding-right:100px">
-        </div>
-        
-        <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin-top: 40px;display: flex;justify-content: center; ">
-            <button class="btn btn--blue register-btn" style="text-decoration:none" id="forgot_submit2"> <span>Change Pasword</span>
-                <div class="spinner" style="display:none">
-                    <div class="bounce1"></div>
-                    <div class="bounce2"></div>
-                    <div class="bounce3"></div>
+
+                <div class="input-holder-byicon">
+                    <input type="password" name="forgot_password" id="forgot_password" value="" placeholder="Type your New Password" style="padding-right:100px">
                 </div>
-            </button>
-        </div>
+
+                <div class="input-holder-byicon">
+                    <input type="password" name="forgot_password4" id="forgot_password4" value="" placeholder="Confirm Password" style="padding-right:100px">
+                </div>
+
+                <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin-top: 40px;display: flex;justify-content: center; ">
+                    <button class="btn btn--blue register-btn" style="text-decoration:none" id="forgot_submit2"> <span>Change Pasword</span>
+                        <div class="spinner" style="display:none">
+                            <div class="bounce1"></div>
+                            <div class="bounce2"></div>
+                            <div class="bounce3"></div>
+                        </div>
+                    </button>
+                </div>
                 <div class="input-row fo2_message" style="padding: 0px !important; margin: 25px auto !important;text-align: center;display: flex;justify-content: center; ">
                 </div>
-    </form>
-                               <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+            </form>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            if(<?php echo '"' . $forgot_passsword_v . '"'; ?> == "true"){
-               $("#forgot_p_onclick").trigger("click"); 
-                console.log("true");
-            }else{
-                console.log("false");
-            }
-            
-            
-            $("#forgot_password2").submit(function(event) {
-                event.preventDefault();
-                
-                var email = <?php if(isset($_GET['email'])){ echo '"' . $_GET['email'] . '"';} ?>;
-                var elapsetime = <?php if(isset($_GET['email'])){ echo '"' . $get_et . '"';} ?>;
-                var forgot_password = $("#forgot_password").val();
-                var forgot_password4 = $("#forgot_password4").val();
-                var forgot_submit2 = $("#forgot_submit2").val();
-                
-
-
-//                $("#new-password--js").val('');
-                $("#forgot_submit2").html('<b>....</b>');
-                $.ajax({
-                    type: "POST",
-                    url: "phpscripts/forgot_password.php/",
-                    data: {
-                        email: email,
-                        elapsetime: elapsetime,
-                        forgot_password: forgot_password,
-                        forgot_password2: forgot_password4,
-                        forgot_submit2: forgot_submit2
-                    },
-                    success: function(response) {
-                        $(".fo2_message").html(response);
-                        //      console.log(response);
-                        //      console.log("Done"); 
-                        $("#forgot_submit2").html('Change Pasword');
-                    },
-                    error: function(response) {
-                        console.log(response);
-                        $("#forgot_submit2").html('Change Pasword');
+            <script>
+                $(document).ready(function() {
+                    if (<?php echo '"' . $forgot_passsword_v . '"'; ?> == "true") {
+                        $("#forgot_p_onclick").trigger("click");
+                        console.log("true");
+                    } else {
+                        console.log("false");
                     }
+
+
+                    $("#forgot_password2").submit(function(event) {
+                        event.preventDefault();
+
+                        var email = <?php if (isset($_GET['email'])) {
+                                        echo '"' . $_GET['email'] . '"';
+                                    } ?>;
+                        var elapsetime = <?php if (isset($_GET['email'])) {
+                                                echo '"' . $get_et . '"';
+                                            } ?>;
+                        var forgot_password = $("#forgot_password").val();
+                        var forgot_password4 = $("#forgot_password4").val();
+                        var forgot_submit2 = $("#forgot_submit2").val();
+
+
+
+                        //                $("#new-password--js").val('');
+                        $("#forgot_submit2").html('<b>....</b>');
+                        $.ajax({
+                            type: "POST",
+                            url: "phpscripts/forgot_password.php/",
+                            data: {
+                                email: email,
+                                elapsetime: elapsetime,
+                                forgot_password: forgot_password,
+                                forgot_password2: forgot_password4,
+                                forgot_submit2: forgot_submit2
+                            },
+                            success: function(response) {
+                                $(".fo2_message").html(response);
+                                //      console.log(response);
+                                //      console.log("Done"); 
+                                $("#forgot_submit2").html('Change Pasword');
+                            },
+                            error: function(response) {
+                                console.log(response);
+                                $("#forgot_submit2").html('Change Pasword');
+                            }
+                        });
+
+                    });
+
                 });
-
-            });
-
-        });
-
-    </script>
+            </script>
         </div>
 
 
@@ -1736,7 +1722,7 @@ s0.parentNode.insertBefore(s1,s0);
 
 
                 <form method=post name=mainform id="support_form" style="height:auto !important">
-<!--
+                    <!--
                     <input type="hidden" name="form_id" value="16080211547515">
                     <input type="hidden" name="form_token" value="f8b34e1479c0d31625b117a7ec847c1f">
                     <input type=hidden name=a value=support>
@@ -1766,53 +1752,52 @@ s0.parentNode.insertBefore(s1,s0);
                     <button type="submit" id="support_submit" class="btn btn--blue">Send</button>
                     <br><br>
                     <div class="input-row s_message" style="padding: 0px !important; margin: 25px auto !important;text-align: center;display: flex;justify-content: center; ">
-<!--                    <div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px"> Registration Successful</div>-->
-                </div>
+                        <!--                    <div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px"> Registration Successful</div>-->
+                    </div>
                 </form>
-                   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            $("#support_form").submit(function(event) {
-                event.preventDefault();
-                
-
-                var name = $("#support_name").val();
-                var email = $("#support_email").val();
-                var message = $("#support_message").val();
-                var support_submit = $("#support_submit").val();
-                
-                console.log("name: " + name + " email: " + email  + " message: " + message );
+                <script>
+                    $(document).ready(function() {
+                        $("#support_form").submit(function(event) {
+                            event.preventDefault();
 
 
-//                $("#new-password--js").val('');
-                $("#support_submit").html('<b>....</b>');
-                $.ajax({
-                    type: "POST",
-                    url: "phpscripts/support.php/",
-                    data: {
-                        name: name,
-                        email: email,
-                        message: message,
-                        support_submit: support_submit
-                    },
-                    success: function(response) {
-                        $(".s_message").html(response);
-                        //      console.log(response);
-                        //      console.log("Done"); 
-                        $("#support_submit").html('Send');
-                    },
-                    error: function(response) {
-                        console.log(response);
-                        $("#support_submit").html('Send');
-                    }
-                });
+                            var name = $("#support_name").val();
+                            var email = $("#support_email").val();
+                            var message = $("#support_message").val();
+                            var support_submit = $("#support_submit").val();
 
-            });
+                            console.log("name: " + name + " email: " + email + " message: " + message);
 
-        });
 
-    </script>
+                            //                $("#new-password--js").val('');
+                            $("#support_submit").html('<b>....</b>');
+                            $.ajax({
+                                type: "POST",
+                                url: "phpscripts/support.php/",
+                                data: {
+                                    name: name,
+                                    email: email,
+                                    message: message,
+                                    support_submit: support_submit
+                                },
+                                success: function(response) {
+                                    $(".s_message").html(response);
+                                    //      console.log(response);
+                                    //      console.log("Done"); 
+                                    $("#support_submit").html('Send');
+                                },
+                                error: function(response) {
+                                    console.log(response);
+                                    $("#support_submit").html('Send');
+                                }
+                            });
+
+                        });
+
+                    });
+                </script>
             </div>
             <div class="contact-modal__info">
                 <ul>
@@ -1820,26 +1805,28 @@ s0.parentNode.insertBefore(s1,s0);
                         <svg viewBox="0 0 29.23 29.27">
                             <use xlink:href="#phoneIcon"></use>
                         </svg>
-                        phone number <strong> <?php echo $support_phone; ?></strong> </li>
+                        phone number <strong> <?php echo $support_phone; ?></strong>
+                    </li>
                     <li>
                         <svg viewBox="0 0 28.11 28.28">
                             <use xlink:href="#emailInfo"></use>
                         </svg>
-                        email address <strong> <?php echo $support_email; ?></strong> </li>
+                        email address <strong> <?php echo $support_email; ?></strong>
+                    </li>
                     <li>
                         <svg viewBox="0 0 26.92 28.82">
                             <use xlink:href="#locationIcon"></use>
                         </svg>
-                        address 
+                        address
                         <strong class="address">249 GROSVENOR STREET, MAYFAIR, LONDON, ENGLAND, W1K 3HP</strong>
-<!--                        <strong class="address">249 GROSVENOR STREET, MAYFAIR, LONDON, ENGLAND, W1K 3HP</strong>-->
+                        <!--                        <strong class="address">249 GROSVENOR STREET, MAYFAIR, LONDON, ENGLAND, W1K 3HP</strong>-->
                     </li>
                 </ul>
             </div>
-            
+
         </div>
 
-<!--              <div class="modal-holder" bis_skin_checked="1" style="display: none;">      -->
+        <!--              <div class="modal-holder" bis_skin_checked="1" style="display: none;">      -->
         <div class="modal-general withdrawal-modal" bis_skin_checked="1" style="display: none;">
             <button class="modal-close">
                 <svg viewBox="0 0 11.58 11.58">
@@ -1847,318 +1834,314 @@ s0.parentNode.insertBefore(s1,s0);
                 </svg>
             </button>
             <form method="post" id="withdrawal_form">
-                
+
                 <?php
-                if(isset($_SESSION['id'])){
-                     if(normalize_amount($account_balance) > 0){
-                    ?>
-                <div class="input-holder-byicon">
-                    <label for="country" style="margin-left:10px;color:#696969">Bitcoin Wallet Adress:</label><br>
-                    <input type="text" name="withdraw_bitcoin_address" id="withdraw_bitcoin_address" value="<?php
-                        if(!empty($bitcoin_wallet_address)){
-                            echo $bitcoin_wallet_address;
-                        }else{
-                            echo "Not Set";
-                        }
-                
-                        ?>" style="font-size: 14px;background-color:grey" autofocus placeholder="Username" readonly>
-                    <label for="country" style="margin-left:10px;color:#000">Make sure your wallet address is correct:</label><br>
-                </div><br>
-                <div class="input-holder-byicon">
-                    <label for="plan" style="margin-left:10px;color:#A8A8A8">Withdaw from:</label><br>
-                   <select id="plan" class="plan_select" name="country" style="height:60px !important;width:inherit !important;font-size:13px !important;padding:0px 15px !important;margin-right:0px !important;border-radius:4px;">
-                       <option value="">Select plan to withdraw</option>
-                        <?php 
+                if (isset($_SESSION['id'])) {
+                    if (normalize_amount($account_balance) > 0) {
+                ?>
+                        <div class="input-holder-byicon">
+                            <label for="country" style="margin-left:10px;color:#696969">Bitcoin Wallet Adress:</label><br>
+                            <input type="text" name="withdraw_bitcoin_address" id="withdraw_bitcoin_address" value="<?php
+                                                                                                                    if (!empty($bitcoin_wallet_address)) {
+                                                                                                                        echo $bitcoin_wallet_address;
+                                                                                                                    } else {
+                                                                                                                        echo "Not Set";
+                                                                                                                    }
+
+                                                                                                                    ?>" style="font-size: 14px;background-color:grey" autofocus placeholder="Username" readonly>
+                            <label for="country" style="margin-left:10px;color:#000">Make sure your wallet address is correct:</label><br>
+                        </div><br>
+                        <div class="input-holder-byicon">
+                            <label for="plan" style="margin-left:10px;color:#A8A8A8">Withdaw from:</label><br>
+                            <select id="plan" class="plan_select" name="country" style="height:60px !important;width:inherit !important;font-size:13px !important;padding:0px 15px !important;margin-right:0px !important;border-radius:4px;">
+                                <option value="">Select plan to withdraw</option>
+                                <?php
                                 $plans_b = [];
                                 $plans_c = [];
                                 $plans_array = array("BASIC PLAN", "BRONZE PLAN", "SILVER PLAN", "PREMIUM PLAN");
-                        if(isset($_SESSION['id'])){
-                            $user_i = $_SESSION['id'];
-                            include('phpscripts/connection.php');
-                               $sql = "SELECT * FROM `deposit_list` WHERE u_id = '$user_i' AND status= 'pending'" ;
-                                
-                                          if($result = mysqli_query($link, $sql)){
-                                    if(mysqli_num_rows($result)>0){
-                                        while($row = mysqli_fetch_array($result, MYSQLI_ASSOC)){
-                                            $plans_b[] = $row;
+                                if (isset($_SESSION['id'])) {
+                                    $user_i = $_SESSION['id'];
+                                    include('phpscripts/connection.php');
+                                    $sql = "SELECT * FROM `deposit_list` WHERE u_id = '$user_i' AND status= 'pending'";
 
+                                    if ($result = mysqli_query($link, $sql)) {
+                                        if (mysqli_num_rows($result) > 0) {
+                                            while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                                                $plans_b[] = $row;
+                                            }
                                         }
                                     }
-                                          }
-                            
-                            
-                            if(!empty($plans_b)){
-                                foreach($plans_b as $plb){
-                                    $plans_c[] = $plb['type'];
+
+
+                                    if (!empty($plans_b)) {
+                                        foreach ($plans_b as $plb) {
+                                            $plans_c[] = $plb['type'];
+                                        }
+                                    }
+                                    sort($plans_c);
+                                    $plans_c = array_unique($plans_c);
                                 }
-                            }
-                            sort($plans_c);
-                            $plans_c = array_unique($plans_c);
-                        }
-                        if(!empty($plans_c)){
-                            foreach($plans_c as $plc){
-                                echo '<option value="'. $plc .'">' . $plans_array[$plc - 1] . '</option>';
-                            }
-                        }
-                        if(isset($_SESSION['id'])){
-                            if($total_referal_commission != '' && $total_referal_commission > 0){
-                                echo '<option value="5">REFERRAL COMMISSION</option>';
-                            }
-                        }
-                    
-                       ?>
-                    </select>
-                </div>
-                <div class="input-holder-byicon">
-                    <label for="country" style="margin-left:10px;color:#696969">Amount($):</label><br>
-                    <input type="text" name="withdraw_amount" id="withdraw_amount" value='0' style="font-size: 14px;" autofocus placeholder="Amount" readonly>
-                </div><br>
-                <div class="input-holder-byicon">
-                    <label for="country" style="margin-left:10px;color:#696969">Enter Password:</label><br>
-                    <input type="password" name="withdraw_password" id="withdraw_password" value='' style="font-size: 14px;" autofocus placeholder="Password">
-                </div>
-                
-                
-                <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
-		<button class="btn btn--blue register-btn" style="text-decoration:none" id="withdrawal_submit"> <span>Withdraw Funds</span>
-				<div class="spinner" style="display:block">
-					<div class="bounce1"></div>
-					<div class="bounce2"></div>
-					<div class="bounce3"></div>
-				</div>
-			</button>
-		</div>
-                <div class="account-modal-bottom wi_message" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
-                </div>
-                <?php
-                }else{
+                                if (!empty($plans_c)) {
+                                    foreach ($plans_c as $plc) {
+                                        echo '<option value="' . $plc . '">' . $plans_array[$plc - 1] . '</option>';
+                                    }
+                                }
+                                if (isset($_SESSION['id'])) {
+                                    if ($total_referal_commission != '' && $total_referal_commission > 0) {
+                                        echo '<option value="5">REFERRAL COMMISSION</option>';
+                                    }
+                                }
+
+                                ?>
+                            </select>
+                        </div>
+                        <div class="input-holder-byicon">
+                            <label for="country" style="margin-left:10px;color:#696969">Amount($):</label><br>
+                            <input type="text" name="withdraw_amount" id="withdraw_amount" value='0' style="font-size: 14px;" autofocus placeholder="Amount" readonly>
+                        </div><br>
+                        <div class="input-holder-byicon">
+                            <label for="country" style="margin-left:10px;color:#696969">Enter Password:</label><br>
+                            <input type="password" name="withdraw_password" id="withdraw_password" value='' style="font-size: 14px;" autofocus placeholder="Password">
+                        </div>
+
+
+                        <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
+                            <button class="btn btn--blue register-btn" style="text-decoration:none" id="withdrawal_submit"> <span>Withdraw Funds</span>
+                                <div class="spinner" style="display:block">
+                                    <div class="bounce1"></div>
+                                    <div class="bounce2"></div>
+                                    <div class="bounce3"></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="account-modal-bottom wi_message" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
+                        </div>
+                    <?php
+                    } else {
                     ?>
-                <div class="error-modal">
-                  <div class="modal-head">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 99.5 99.95">
-                      <defs>
-                        <linearGradient id="linear-gradient-error" x1="856.76" y1="412.02" x2="937.99" y2="412.02" gradientUnits="userSpaceOnUse">
-                          <stop offset="0" stop-color="#ff6873"></stop>
-                          <stop offset="1" stop-color="#ff896c"></stop>
-                        </linearGradient>
-                      </defs>
-                      <path d="M902.85,455.57c-17.44,6.74-58.1-16.06-62.89-31.67-3.31-10.78,11.94-20.53,17.07-30.49,5-9.66,3.83-25.67,14.3-30.51,23-10.6,52.71.23,60.43,24.53,3.49,11-6.38,23.39-10.89,34.11C916.54,431.86,914.12,451.22,902.85,455.57Z" transform="translate(-838.49 -357.84)" fill="none" stroke="#e8f3fc" stroke-miterlimit="10" stroke-width="2"></path>
-                      <path d="M937.83,411c.78,10.66-1.18,22.21-7.61,30.51a27.82,27.82,0,0,1-21.9,10.86,32.92,32.92,0,0,1-8.78-1C880,444,848,426,859,403c7-15,23-33,42.67-31.22a32.64,32.64,0,0,1,8.61,1.79,33.31,33.31,0,0,1,15.82,9.93,49.94,49.94,0,0,1,4,4.9C933,392,937.76,406.81,937.83,411Z" transform="translate(-838.49 -357.84)" fill="url(#linear-gradient-error)"></path>
-                      <line x1="51.74" y1="46.79" x2="68.31" y2="63.35" fill="none" stroke="#fff" stroke-linecap="round" stroke-miterlimit="10" stroke-width="4"></line>
-                      <line x1="68.31" y1="46.79" x2="51.74" y2="63.35" fill="none" stroke="#fff" stroke-linecap="round" stroke-miterlimit="10" stroke-width="4"></line>
-                    </svg>
-                    <h2>Sorry!</h2>
-                  </div>
-                  <ul>
-                    <li>
-                      <p>You have no funds to withdraw.</p>
-                    </li>
-                  </ul>
-                </div>
+                        <div class="error-modal">
+                            <div class="modal-head">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 99.5 99.95">
+                                    <defs>
+                                        <linearGradient id="linear-gradient-error" x1="856.76" y1="412.02" x2="937.99" y2="412.02" gradientUnits="userSpaceOnUse">
+                                            <stop offset="0" stop-color="#ff6873"></stop>
+                                            <stop offset="1" stop-color="#ff896c"></stop>
+                                        </linearGradient>
+                                    </defs>
+                                    <path d="M902.85,455.57c-17.44,6.74-58.1-16.06-62.89-31.67-3.31-10.78,11.94-20.53,17.07-30.49,5-9.66,3.83-25.67,14.3-30.51,23-10.6,52.71.23,60.43,24.53,3.49,11-6.38,23.39-10.89,34.11C916.54,431.86,914.12,451.22,902.85,455.57Z" transform="translate(-838.49 -357.84)" fill="none" stroke="#e8f3fc" stroke-miterlimit="10" stroke-width="2"></path>
+                                    <path d="M937.83,411c.78,10.66-1.18,22.21-7.61,30.51a27.82,27.82,0,0,1-21.9,10.86,32.92,32.92,0,0,1-8.78-1C880,444,848,426,859,403c7-15,23-33,42.67-31.22a32.64,32.64,0,0,1,8.61,1.79,33.31,33.31,0,0,1,15.82,9.93,49.94,49.94,0,0,1,4,4.9C933,392,937.76,406.81,937.83,411Z" transform="translate(-838.49 -357.84)" fill="url(#linear-gradient-error)"></path>
+                                    <line x1="51.74" y1="46.79" x2="68.31" y2="63.35" fill="none" stroke="#fff" stroke-linecap="round" stroke-miterlimit="10" stroke-width="4"></line>
+                                    <line x1="68.31" y1="46.79" x2="51.74" y2="63.35" fill="none" stroke="#fff" stroke-linecap="round" stroke-miterlimit="10" stroke-width="4"></line>
+                                </svg>
+                                <h2>Sorry!</h2>
+                            </div>
+                            <ul>
+                                <li>
+                                    <p>You have no funds to withdraw.</p>
+                                </li>
+                            </ul>
+                        </div>
                 <?php
-                }
+                    }
                 }
                 ?>
-                
-                
+
+
             </form>
-                <script>
-        $(document).ready(function() {
-            
-    $('.plan_select').change(function() {
-        var plan_g = $(".plan_select").val();
-        var get_amount = "";
-        var u_id = <?php
-            if(isset($_SESSION['id'])){
-                     echo '"' . $_SESSION['id'] . '"'; 
-                    }
-            
-             ?>;
-//        console.log(plan_g);
-        var total_referal_commission = <?php
-            if(isset($_SESSION['id'])){
-                     echo '"' . $total_referal_commission . '"';
-                    }
-            
-             ?>;
-        if(plan_g != ""){
-            $.ajax({
-                    type: "POST",
-                    url: "phpscripts/withdraw.php/",
-                    data: {
-                        u_id: u_id,
-                        total_referal_commission: total_referal_commission,
-                        plan_g: plan_g,
-                        get_amount: get_amount
-                    },
-                    success: function(response) {
-//                        $(".wi_message").html(response);
-                        $('#withdraw_amount').attr('value', response)
-                              console.log(response);
-                    },
-                    error: function(response) {
-                        console.log(response);
-                    }
+            <script>
+                $(document).ready(function() {
+
+                    $('.plan_select').change(function() {
+                        var plan_g = $(".plan_select").val();
+                        var get_amount = "";
+                        var u_id = <?php
+                                    if (isset($_SESSION['id'])) {
+                                        echo '"' . $_SESSION['id'] . '"';
+                                    }
+
+                                    ?>;
+                        //        console.log(plan_g);
+                        var total_referal_commission = <?php
+                                                        if (isset($_SESSION['id'])) {
+                                                            echo '"' . $total_referal_commission . '"';
+                                                        }
+
+                                                        ?>;
+                        if (plan_g != "") {
+                            $.ajax({
+                                type: "POST",
+                                url: "phpscripts/withdraw.php/",
+                                data: {
+                                    u_id: u_id,
+                                    total_referal_commission: total_referal_commission,
+                                    plan_g: plan_g,
+                                    get_amount: get_amount
+                                },
+                                success: function(response) {
+                                    //                        $(".wi_message").html(response);
+                                    $('#withdraw_amount').attr('value', response)
+                                    console.log(response);
+                                },
+                                error: function(response) {
+                                    console.log(response);
+                                }
+                            });
+                        } else {
+                            $('#withdraw_amount').attr('value', 0);
+                        }
+
+                    });
+
+                    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////          
+                    $("#withdrawal_form").submit(function(event) {
+                        event.preventDefault();
+                        var u_id = <?php
+                                    if (isset($_SESSION['id'])) {
+                                        echo '"' . $_SESSION['id'] . '"';
+                                    }
+
+                                    ?>;
+                        var main_password = <?php
+                                            if (isset($_SESSION['id'])) {
+                                                echo '"' . $password . '"';
+                                            }
+
+                                            ?>;
+                        var email = <?php
+                                    if (isset($_SESSION['id'])) {
+                                        echo '"' . $email . '"';
+                                    }
+
+                                    ?>;
+                        var account_balance = <?php
+                                                if (isset($_SESSION['id'])) {
+                                                    echo '"' . $account_balance . '"';
+                                                }
+
+                                                ?>;
+                        var withdraw_bitcoin_address = $("#withdraw_bitcoin_address").val();
+                        var plan_c = $(".plan_select").val();
+                        if ($("#plan").val() != '') {
+                            plan = '';
+                        }
+                        var withdraw_password = $("#withdraw_password").val();
+                        var withdraw_amount = $("#withdraw_amount").val();
+                        var withdrawal_submit = $("#withdrawal_submit").val();
+                        //                
+                        //                console.log("email: " + email + " account_balance: " + account_balance  + " withdraw_amount: " + withdraw_amount + " plan: " + plan_c);
+
+
+                        //                $("#new-password--js").val('');
+                        $("#withdrawal_submit").html('<b>....</b>');
+                        $.ajax({
+                            type: "POST",
+                            url: "phpscripts/withdraw.php/",
+                            data: {
+                                u_id: u_id,
+                                plan: plan_c,
+                                main_password: main_password,
+                                email: email,
+                                account_balance: account_balance,
+                                withdraw_bitcoin_address: withdraw_bitcoin_address,
+                                withdraw_password: withdraw_password,
+                                withdraw_amount: withdraw_amount,
+                                withdrawal_submit: withdrawal_submit
+                            },
+                            success: function(response) {
+                                $(".wi_message").html(response);
+                                //      console.log(response);
+                                //      console.log("Done"); 
+                                $("#withdrawal_submit").html('Withdraw Funds');
+                            },
+                            error: function(response) {
+                                console.log(response);
+                                $("#withdrawal_submit").html('Withdraw Funds');
+                            }
+                        });
+
+                    });
+
                 });
-        }else{
-            $('#withdraw_amount').attr('value', 0);
-        }
-                        
-});         
-            
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////          
-            $("#withdrawal_form").submit(function(event) {
-                event.preventDefault();
-                var u_id = <?php
-                    if(isset($_SESSION['id'])){
-                      echo '"' . $_SESSION['id'] . '"';  
-                    }
-                    
-                     ?>;
-                var main_password = <?php
-                    if(isset($_SESSION['id'])){
-                      echo '"' . $password . '"';  
-                    }
-                    
-                     ?>;
-                var email = <?php
-                    if(isset($_SESSION['id'])){
-                      echo '"' . $email . '"';  
-                    }
-                    
-                     ?>;
-                var account_balance = <?php
-                    if(isset($_SESSION['id'])){
-                      echo '"' . $account_balance . '"';  
-                    }
-                    
-                     ?>;
-                var withdraw_bitcoin_address = $("#withdraw_bitcoin_address").val();
-                var plan_c = $(".plan_select").val();
-                if ($("#plan").val() != ''){
-                    plan = '';
-                }
-                var withdraw_password = $("#withdraw_password").val();
-                var withdraw_amount = $("#withdraw_amount").val();
-                var withdrawal_submit = $("#withdrawal_submit").val();
-//                
-//                console.log("email: " + email + " account_balance: " + account_balance  + " withdraw_amount: " + withdraw_amount + " plan: " + plan_c);
-
-
-//                $("#new-password--js").val('');
-                $("#withdrawal_submit").html('<b>....</b>');
-                $.ajax({
-                    type: "POST",
-                    url: "phpscripts/withdraw.php/",
-                    data: {
-                        u_id: u_id,
-                        plan: plan_c,
-                        main_password: main_password,
-                        email: email,
-                        account_balance: account_balance,
-                        withdraw_bitcoin_address: withdraw_bitcoin_address,
-                        withdraw_password: withdraw_password,
-                        withdraw_amount: withdraw_amount,
-                        withdrawal_submit: withdrawal_submit
-                    },
-                    success: function(response) {
-                        $(".wi_message").html(response);
-                        //      console.log(response);
-                        //      console.log("Done"); 
-                        $("#withdrawal_submit").html('Withdraw Funds');
-                    },
-                    error: function(response) {
-                        console.log(response);
-                        $("#withdrawal_submit").html('Withdraw Funds');
-                    }
-                });
-
-            });
-
-        });
-
-    </script>
+            </script>
         </div>
-<!--    </div>-->
-<div class="modal-general count_down-modal" bis_skin_checked="1" style="display: none;">
+        <!--    </div>-->
+        <div class="modal-general count_down-modal" bis_skin_checked="1" style="display: none;">
             <button class="modal-close">
                 <svg viewBox="0 0 11.58 11.58">
                     <use xlink:href="#closeIcon"></use>
                 </svg>
             </button>
             <form method="post" id="withdrawal_form">
-                
-              <h1 style="text-align:center;color:#A38A00">+$200 </h1>  
-              <h2 style="text-align:center;">Welcome Bonus</h2>
-                
-              <h5 style="text-align:center;">Deposit funds(0.045+ BTC) to your account now, and enjoy extra benefit: <span style="color:#A38A00">$200 Bonus</span></h5>
+
+                <h1 style="text-align:center;color:#A38A00">+$200 </h1>
+                <h2 style="text-align:center;">Welcome Bonus</h2>
+
+                <h5 style="text-align:center;">Deposit funds(0.045+ BTC) to your account now, and enjoy extra benefit: <span style="color:#A38A00">$200 Bonus</span></h5>
                 <br>
                 <h6 style="text-align:center;">Time Left:</h6>
-<!--                <h3 id="tester"><?php if(isset($_SESSION['id'])){
-                                                          echo $c_time - $reg_stamp;
-                                                        }
- ?></h3>-->
+                <!--                <h3 id="tester"><?php if (isset($_SESSION['id'])) {
+                                                        echo $c_time - $reg_stamp;
+                                                    }
+                                                    ?></h3>-->
                 <h2 style="text-align:center;"><span style="background-color:#808080;padding:6px;border-radius:3.5px;" id="count_hour">24</span> : <span style="background-color:#808080;padding:6px;border-radius:3.5px;" id="count_min">00</span> : <span style="background-color:#808080;padding:6px;border-radius:3.5px;" id="count_sec">00</span></h2>
                 <h6 style="text-align:center;"><span style="margin-right:6.5%">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hours</span> <span style="margin-right:6.5%">&nbsp;&nbsp;&nbsp;&nbsp;Minutes</span> <span style="margin-right:3%">seconds</span></h6>
-                
+
                 <br><br>
                 <h5 style="text-align:center;">Simply click the "Deposit" or "Make A Deposit", follow the instructions and get your account funded. The minimum amount to deposit is equal to 0.001BTC and there is no fees on deposits</h5>
             </form>
 
         </div>
-        <input type="hidden" id="diff_value" value="<?php 
-                                                    if(isset($_SESSION['id'])){
-                                                          echo $c_time - $reg_stamp;  
-                                                        }
-                                                     ?>">
-        <input type="hidden" id="login_count_v" value="<?php 
-                                                       if(isset($_SESSION['id'])){
-                                                          echo $login_count; 
+        <input type="hidden" id="diff_value" value="<?php
+                                                    if (isset($_SESSION['id'])) {
+                                                        echo $c_time - $reg_stamp;
+                                                    }
+                                                    ?>">
+        <input type="hidden" id="login_count_v" value="<?php
+                                                        if (isset($_SESSION['id'])) {
+                                                            echo $login_count;
                                                         }
                                                         ?>">
-            <script>
-                
-        $(document).ready(function() {
-            var current_diff1 = $("#diff_value").val();
-            var login_count_v = $("#login_count_v").val();
-            var current_diff = current_diff1;
-//            var variable = [1, 2, 3];
-//            console.log(current_diff1);
-            function format_d(xt){
-                var lnt = xt.toString().length;
-                var nvb = xt;
-                    if(lnt < 2){
+        <script>
+            $(document).ready(function() {
+                var current_diff1 = $("#diff_value").val();
+                var login_count_v = $("#login_count_v").val();
+                var current_diff = current_diff1;
+                //            var variable = [1, 2, 3];
+                //            console.log(current_diff1);
+                function format_d(xt) {
+                    var lnt = xt.toString().length;
+                    var nvb = xt;
+                    if (lnt < 2) {
                         nvb = "0" + xt;
-                    }else{
+                    } else {
                         nvb = xt;
                     }
-                return nvb;
-            }
-            if(current_diff1 < 86400 && login_count_v == 0){
-                
-                current_diff = 86397;
-                $("#open_counter").trigger("click");
-                window.setInterval(function(){
-                    
-                   current_diff = current_diff - 1
-                    var hr;
-                    var mn;
-                    var sc;
-                    hr = Math.floor(current_diff/3600);
-                    
-                    var n = current_diff % 3600;
-                    mn = Math.floor(n/60);
-                    sc = n % 60;
-                    $('#count_hour').html(format_d(hr));
-                    $('#count_min').html(format_d(mn));
-                    $('#count_sec').html(format_d(sc));
-                    
-                }, 1000);
-               }
+                    return nvb;
+                }
+                if (current_diff1 < 86400 && login_count_v == 0) {
 
-        });
+                    current_diff = 86397;
+                    $("#open_counter").trigger("click");
+                    window.setInterval(function() {
 
-    </script>
+                        current_diff = current_diff - 1
+                        var hr;
+                        var mn;
+                        var sc;
+                        hr = Math.floor(current_diff / 3600);
+
+                        var n = current_diff % 3600;
+                        mn = Math.floor(n / 60);
+                        sc = n % 60;
+                        $('#count_hour').html(format_d(hr));
+                        $('#count_min').html(format_d(mn));
+                        $('#count_sec').html(format_d(sc));
+
+                    }, 1000);
+                }
+
+            });
+        </script>
         <div class="modal-general deposit_modal1" bis_skin_checked="1" style="display: none;">
             <button class="modal-close" id="first_close">
                 <svg viewBox="0 0 11.58 11.58">
@@ -2166,139 +2149,138 @@ s0.parentNode.insertBefore(s1,s0);
                 </svg>
             </button>
             <form method="post" id="deposit_form1">
-                
-              <h2 style="text-align:center;">Pay With BTC/ETH</h2>
-              <h4 style="text-align:center;">to AstroForex</h4>
-                
+
+                <h2 style="text-align:center;">Pay With BTC/ETH</h2>
+                <h4 style="text-align:center;">to AstroForex</h4>
+
                 <div class="input-holder-byicon">
                     <label for="de_amount" style="margin-left:10px;color:#696969">Amount($):</label><br>
                     <input type="text" name="de_amount" id="de_amount" value='0' style="font-size: 14px;" autofocus placeholder="Amount" readonly>
                 </div><br>
                 <div class="input-holder-byicon">
                     <label for="plan" style="margin-left:10px;color:#A8A8A8">Select Cryptocurrency:</label><br>
-                   <select id="pay_currency" class="plan_select" name="pay_currency" style="height:60px !important;width:inherit !important;font-size:13px !important;padding:0px 15px !important;margin-right:0px !important;border-radius:4px;">
-                       <option value="">Select Cryptocurrency</option>
-                       <option value="BTC">BTC</option>
-                       <option value="ETH">ETH</option>
+                    <select id="pay_currency" class="plan_select" name="pay_currency" style="height:60px !important;width:inherit !important;font-size:13px !important;padding:0px 15px !important;margin-right:0px !important;border-radius:4px;">
+                        <option value="">Select Cryptocurrency</option>
+                        <option value="BTC">BTC</option>
+                        <option value="ETH">ETH</option>
                     </select>
                 </div><br>
                 <div class="input-holder-byicon">
                     <label for="de_email" style="margin-left:10px;color:#696969">Enter E-mail:</label><br>
                     <input type="text" name="de_email" id="de_email" value='' style="font-size: 14px;" autofocus placeholder="E-mail">
                 </div>
-                
-                
+
+
                 <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
-		<button class="btn btn--blue register-btn" style="text-decoration:none" id="de_submit"> <span>Pay to AstroForex</span>
-				<div class="spinner" style="display:block">
-					<div class="bounce1"></div>
-					<div class="bounce2"></div>
-					<div class="bounce3"></div>
-				</div>
-			</button>
-		</div>
+                    <button class="btn btn--blue register-btn" style="text-decoration:none" id="de_submit"> <span>Pay to AstroForex</span>
+                        <div class="spinner" style="display:block">
+                            <div class="bounce1"></div>
+                            <div class="bounce2"></div>
+                            <div class="bounce3"></div>
+                        </div>
+                    </button>
+                </div>
                 <div class="account-modal-bottom de1_message" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
                 </div>
-                
+
             </form>
             <script>
-        $(document).ready(function() {
-                     
-            $("#deposit_form1").submit(function(event) {
-                event.preventDefault();
-                var u_id = <?php 
-                    if(isset($_SESSION['id'])){
-                      echo '"' . $_SESSION['id'] . '"';  
-                    }
-                     ?>;
-                var username = <?php 
-                    if(isset($_SESSION['id'])){
-                        echo '"' . $username . '"';
-                    }
-                     ?>;
-                var de_amount = $("#de_amount").val();
-                var de_email = $("#de_email").val();
-                var pay_currency = $("#pay_currency").val();
-//                var type = $("input[name='h_id']:checked").val();
-                var type_r = type;
-                var de_submit = $("#de_submit").val();
-                console.log("Traced Type: " + type_r)
-                
-//                console.log('Type: ' + type);
-                
-                $("#de_submit").html('<b>....</b>');
-                $.ajax({
-                    type: "POST",
-                    url: "phpscripts/process.php/",
-                    dataType: "json",
-                    data: {
-                        
-                        u_id: u_id,
-                        username: username,
-                        de_amount: de_amount,
-                        pay_currency: pay_currency,
-                        de_email: de_email,
-                        type: type_r,
-                        de_submit: de_submit
-                    },
-                    success: function(response) {
-                        let json = null;
-                    try {
-                        json = JSON.parse(response); 
-                    } catch (e) {
-                        json = response;
-                    }
-                        if(json.error != "ok"){
-                            
-                            var message = '<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">' + json.error +'</div>';
-                            $(".de1_message").html(message);
-                        }else{
-                           $(".de1_message").html(" "); 
-                            $("#first_close").trigger("click");
-                            $("#btc_value").html(json.amount);
-                            $(".paynow_currency").html(json.to_currency);
-                            $(".paynow_wallet").html(json.wallet_address);
-                            $("#last_id").val(json.last_id);
-                            $("#hashcode").val("");
-                            $(".pay_now_message").html(" ");
-//                            console.log("Last ID:" + json.last_id);
-//                            $("#pay_now_button").attr("href", json.gateway_url);
-                            console.log("ok");
-                            $("#deposit_onclick2").trigger("click");
-                        }
-                    
-                    console.log(json.error);
-                        $("#de_submit").html('Pay to AstroForex');
-                    },
-                    error: function(response) {
-                        console.log(response);
-                        $("#de_submit").html('Pay to AstroForex');
-                    }
+                $(document).ready(function() {
+
+                    $("#deposit_form1").submit(function(event) {
+                        event.preventDefault();
+                        var u_id = <?php
+                                    if (isset($_SESSION['id'])) {
+                                        echo '"' . $_SESSION['id'] . '"';
+                                    }
+                                    ?>;
+                        var username = <?php
+                                        if (isset($_SESSION['id'])) {
+                                            echo '"' . $username . '"';
+                                        }
+                                        ?>;
+                        var de_amount = $("#de_amount").val();
+                        var de_email = $("#de_email").val();
+                        var pay_currency = $("#pay_currency").val();
+                        //                var type = $("input[name='h_id']:checked").val();
+                        var type_r = type;
+                        var de_submit = $("#de_submit").val();
+                        console.log("Traced Type: " + type_r)
+
+                        //                console.log('Type: ' + type);
+
+                        $("#de_submit").html('<b>....</b>');
+                        $.ajax({
+                            type: "POST",
+                            url: "phpscripts/process.php/",
+                            dataType: "json",
+                            data: {
+
+                                u_id: u_id,
+                                username: username,
+                                de_amount: de_amount,
+                                pay_currency: pay_currency,
+                                de_email: de_email,
+                                type: type_r,
+                                de_submit: de_submit
+                            },
+                            success: function(response) {
+                                let json = null;
+                                try {
+                                    json = JSON.parse(response);
+                                } catch (e) {
+                                    json = response;
+                                }
+                                if (json.error != "ok") {
+
+                                    var message = '<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">' + json.error + '</div>';
+                                    $(".de1_message").html(message);
+                                } else {
+                                    $(".de1_message").html(" ");
+                                    $("#first_close").trigger("click");
+                                    $("#btc_value").html(json.amount);
+                                    $(".paynow_currency").html(json.to_currency);
+                                    $(".paynow_wallet").html(json.wallet_address);
+                                    $("#last_id").val(json.last_id);
+                                    $("#hashcode").val("");
+                                    $(".pay_now_message").html(" ");
+                                    //                            console.log("Last ID:" + json.last_id);
+                                    //                            $("#pay_now_button").attr("href", json.gateway_url);
+                                    console.log("ok");
+                                    $("#deposit_onclick2").trigger("click");
+                                }
+
+                                console.log(json.error);
+                                $("#de_submit").html('Pay to AstroForex');
+                            },
+                            error: function(response) {
+                                console.log(response);
+                                $("#de_submit").html('Pay to AstroForex');
+                            }
+                        });
+
+                    });
+
                 });
-
-            });
-
-        });
-
-    </script>
+            </script>
 
         </div>
-                <div class="modal-general deposit_modal2" bis_skin_checked="1" style="display: none;">
+        <div class="modal-general deposit_modal2" bis_skin_checked="1" style="display: none;">
             <button class="modal-close" id="second_close">
                 <svg viewBox="0 0 11.58 11.58">
                     <use xlink:href="#closeIcon"></use>
                 </svg>
             </button>
             <form method="post" id="deposit_form2">
-                
-              <h2 style="text-align:center;">Pay With <span class="paynow_currency"></span> to AstroForex</h2><br>
-<!--              <h4 style="text-align:center;"></h4>-->
-                
+
+                <h2 style="text-align:center;">Pay With <span class="paynow_currency"></span> to AstroForex</h2><br>
+                <!--              <h4 style="text-align:center;"></h4>-->
+
                 <div class="input-holder-byicon">
                     <label for="de_amount" style="margin-left:10px;color:#696969;text-align:center;">Amount(<span class="paynow_currency"></span>):</label><br>
                     <h2 style="margin-left:10px;"><span id="btc_value">0.0988488</span> <span class="paynow_currency"></span></h2>
                 </div>
-                
+
                 <h4 style="text-align:left;">Please pay exactly the above stated <span class="paynow_currency"></span> amount to this address: <br><br><span class="paynow_wallet" style="padding:10px;background-color:#DCDCDC;border-radius:3px"></span></h4>
                 <br><br>
                 <input type="hidden" id="last_id" value="">
@@ -2307,87 +2289,86 @@ s0.parentNode.insertBefore(s1,s0);
                     <label for="de_email" style="margin-left:10px;color:#696969">Enter Transaction Hashcode:</label><br>
                     <input type="text" name="hashcode" id="hashcode" value='' style="font-size: 14px;" autofocus placeholder="Hashcode">
                 </div><br>
-                <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin: 10px auto !important;text-align: center;display: flex;justify-content: center; ">  
-                <a class="btn btn--blue register-btn" style="text-decoration:none" id="hashcode_button"> <span>Submit Hashcode</span>
+                <div class="account-modal-bottom" style="padding: 0 !important; position: relative; margin: 10px auto !important;text-align: center;display: flex;justify-content: center; ">
+                    <a class="btn btn--blue register-btn" style="text-decoration:none" id="hashcode_button"> <span>Submit Hashcode</span>
                         <div class="spinner" style="display:block">
                             <div class="bounce1"></div>
                             <div class="bounce2"></div>
                             <div class="bounce3"></div>
                         </div>
                     </a>
-                    
-		      </div>
+
+                </div>
                 <div class="account-modal-bottom pay_now_message" style="padding: 0 !important; position: relative; margin: 40px auto !important;text-align: center;display: flex;justify-content: center; ">
                 </div>
-                
+
             </form>
             <script>
-        $(document).ready(function() {
-                     
-            $("#hashcode_button").click(function(event) {
-                event.preventDefault();
-//                console.log("Hash Button CLicked");
-                var u_id = <?php 
-                    if(isset($_SESSION['id'])){
-                      echo '"' . $_SESSION['id'] . '"';  
-                    }
-                     ?>;
-                var payment_id = $("#last_id").val();
-                var hashcode = $("#hashcode").val();
-                var hashcode_button = $("#hashcode_button").val();
-                
-                
-                $("#hashcode_button").html('<b>....</b>');
-                $.ajax({
-                    type: "POST",
-                    url: "phpscripts/process.php/",
-                    dataType: "json",
-                    data: {
-                        
-                        u_id: u_id,
-                        payment_id: payment_id,
-                        hashcode: hashcode,
-                        hashcode_button: hashcode_button
-                    },
-                    success: function(response) {
-                        let json = null;
-                    try {
-                        json = JSON.parse(response); 
-                    } catch (e) {
-                        json = response;
-                    }
-                        if(json.error != "ok"){
-                            
-                            var message = '<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">' + json.error +'</div>';
-                            $(".pay_now_message").html(message);
-                        }else{
-                            var message = '<div class="alert alert-success" style="border-radius:3px;text-align:center;background-color:green;color:#fff;padding:10px 85px;margin-top:0px">Hashcode Sent <br> Hashcode will be verified ASAP</div>';
-                           $(".pay_now_message").html(message); 
-                            
-                            setTimeout(function(){
-                                $("#second_close").trigger("click"); 
-                            }, 2000);
-                            
-                            
-                            
-                        }
-                        $("#hashcode_button").html('Submit Hashcode');
-                    },
-                    error: function(response) {
-                        console.log(response);
-                        $("#hashcode_button").html('Submit Hashcode');
-                    }
+                $(document).ready(function() {
+
+                    $("#hashcode_button").click(function(event) {
+                        event.preventDefault();
+                        //                console.log("Hash Button CLicked");
+                        var u_id = <?php
+                                    if (isset($_SESSION['id'])) {
+                                        echo '"' . $_SESSION['id'] . '"';
+                                    }
+                                    ?>;
+                        var payment_id = $("#last_id").val();
+                        var hashcode = $("#hashcode").val();
+                        var hashcode_button = $("#hashcode_button").val();
+
+
+                        $("#hashcode_button").html('<b>....</b>');
+                        $.ajax({
+                            type: "POST",
+                            url: "phpscripts/process.php/",
+                            dataType: "json",
+                            data: {
+
+                                u_id: u_id,
+                                payment_id: payment_id,
+                                hashcode: hashcode,
+                                hashcode_button: hashcode_button
+                            },
+                            success: function(response) {
+                                let json = null;
+                                try {
+                                    json = JSON.parse(response);
+                                } catch (e) {
+                                    json = response;
+                                }
+                                if (json.error != "ok") {
+
+                                    var message = '<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">' + json.error + '</div>';
+                                    $(".pay_now_message").html(message);
+                                } else {
+                                    var message = '<div class="alert alert-success" style="border-radius:3px;text-align:center;background-color:green;color:#fff;padding:10px 85px;margin-top:0px">Hashcode Sent <br> Hashcode will be verified ASAP</div>';
+                                    $(".pay_now_message").html(message);
+
+                                    setTimeout(function() {
+                                        $("#second_close").trigger("click");
+                                    }, 2000);
+
+
+
+                                }
+                                $("#hashcode_button").html('Submit Hashcode');
+                            },
+                            error: function(response) {
+                                console.log(response);
+                                $("#hashcode_button").html('Submit Hashcode');
+                            }
+                        });
+
+                    });
+
                 });
-
-            });
-
-        });
-
-    </script>
+            </script>
 
         </div>
     </div>
-    
+
     <script src="scripts/jquery-3.2.1.min.js"></script>
     <script src="scripts/TweenMax.min.js"></script>
     <script src="scripts/layout.js@ver=50"></script>
@@ -2399,30 +2380,39 @@ s0.parentNode.insertBefore(s1,s0);
     <script src="scripts/owl.carousel.min.js"></script>
     <script src="scripts/page.index.js@ver=10"></script>
 
-<script src="scripts/anime.js"></script>
-<script src="scripts/page.about.js"></script>
-<script src="scripts/calculator.js@ver=5"></script> 
-<script src="scripts/page.services.js@ver=10"></script> 
-<script src="scripts/page.dashboard.js@ver=35"></script>
-    <script src="scripts/page.helpCenter.js@ver=25"></script> 
-    <script src="scripts/clipboard.min.js"></script> 
+    <script src="scripts/anime.js"></script>
+    <script src="scripts/page.about.js"></script>
+    <script src="scripts/calculator.js@ver=5"></script>
+    <script src="scripts/page.services.js@ver=10"></script>
+    <script src="scripts/page.dashboard.js@ver=35"></script>
+    <script src="scripts/page.helpCenter.js@ver=25"></script>
+    <script src="scripts/clipboard.min.js"></script>
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en'
+            }, 'google_translate_element');
+        }
+    </script>
+
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <script>
         svg4everybody()
-
     </script>
-    
-<script>
-    new Clipboard('.btn--outlineCopylink');
-</script>
-    
-            <div class="c_message"></div>
+
+    <script>
+        new Clipboard('.btn--outlineCopylink');
+    </script>
+
+    <div class="c_message"></div>
 
     <script>
         $(document).ready(function() {
             $(".logout_button").click(function(event) {
                 event.preventDefault();
                 var logout_button = $(".logout_button").val();
-//                console.log("clicked")
+                //                console.log("clicked")
                 $.ajax({
                     type: "POST",
                     url: "phpscripts/logout.php/",
@@ -2440,10 +2430,9 @@ s0.parentNode.insertBefore(s1,s0);
             });
 
         });
-
     </script>
     <?php
-//    print_r($regt_diff);
+    //    print_r($regt_diff);
     ?>
 </body>
 

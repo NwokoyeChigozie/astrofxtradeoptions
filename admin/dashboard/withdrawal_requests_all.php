@@ -127,6 +127,14 @@ include("../../phpscripts/connection.php");
               </p>
             </a>
           </li>
+          <li class="nav-item has-treeview menu-open">
+            <a href="./history_display.php" class="nav-link">
+              <i class="nav-icon fa fa fa-plus"></i>
+              <p>
+                Homepage History
+              </p>
+            </a>
+          </li>
 
         </ul>
       </nav>
