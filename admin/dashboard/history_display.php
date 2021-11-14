@@ -318,6 +318,97 @@ include("../../phpscripts/connection.php");
                         <!-- /.card -->
 
                     </section>
+                    <br>
+                    <section class="content">
+
+                        <!-- Default box -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Withdrawal History</h3>
+
+                                <div class="card-tools">
+                                    <button type="button" class="btn btn-tool" data-card-widget="collapse" data-toggle="tooltip" title="Collapse">
+                                        <i class="fas fa-minus"></i></button>
+                                </div>
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-striped projects">
+                                    <thead>
+                                        <tr>
+
+
+                                            <th style="width: 30%; text-align:center">
+                                                Name
+                                            </th>
+                                            <th style="width: 30%; text-align:center">
+                                                Date
+                                            </th>
+                                            <th style="width: 18%; text-align:center">
+                                                Plan
+                                            </th>
+                                            <th style="width: 12%">
+                                                Amount
+                                            </th>
+
+                                            <th style="width: 10%; text-align:center">
+
+                                            </th>
+                                            <!--
+                      <th style="width: 8%" class="text-center">
+                          Account status
+                      </th>
+                      <th style="width: 8%" class="text-center">
+                          Last seen
+                      </th>
+-->
+                                            <th style="width: 20%">
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+
+                                        <?php
+                                        $sql1 = "SELECT * FROM `landing_history` WHERE `type` = 'withdrawal'  ORDER BY id DESC ";
+                                        if ($result = mysqli_query($link, $sql1)) {
+                                            if (mysqli_num_rows($result) > 0) {
+                                                while ($row = mysqli_fetch_array($result, MYSQLI_ASSOC)) {
+                                                    $history_id = $row["id"];
+                                                    $history_name =  $row["name"];
+                                                    $history_date =  $row["date"];
+                                                    $history_amount =  $row["amount"];
+                                                    $history_plan =  $row["plan"];
+                                                    $history_type =  $row["type"];
+
+
+                                                    echo " <tr>
+                   <td style='text-align:center'>$history_name</td>
+                   <td style='text-align:center'>$history_date</td>
+                   <td style='text-align:center'>Plan $history_plan</td>
+                   <td style='text-align:center'>$$history_amount</td>
+                   <td class='project-actions text-right'>
+                                                  <a class='btn btn-danger btn-sm' href='historylanding_delete.php?id=$history_id'>
+                                                      <i class='fas fa-trash'>
+                                                      </i>
+                                                      Delete
+                                                  </a>
+                                              </td> </tr>";
+                                                }
+                                            }
+                                        }
+                                        ?>
+
+
+
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+                            <!-- /.card-body -->
+                        </div>
+                        <!-- /.card -->
+
+                    </section>
 
                     <!-- Main content -->
                     <section class="content" style="padding-bottom:40px">
