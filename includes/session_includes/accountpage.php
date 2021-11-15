@@ -133,8 +133,8 @@
 									<label for="plan-3" class="select-plan-item col-xl-6 col-lg-6 col-md-12 col-sm-12" style="margin-bottom: 10px;"> <b>45.00%</b>  Profit <span>In 7  Day(s)</span>
 										</label>    									<input type="hidden" class="plantyper" value="4">
 									<input type="radio" name="h_id" value="4" class="plantyper planRadio planyx" id="plan-4">
-									<label for="plan-4" class="select-plan-item col-xl-6 col-lg-6 col-md-12 col-sm-12" style="margin-bottom: 10px;"> <b>55.00%</b>  Profit <span>In 10  Day(s)</span>
-										</label> </div> 
+									<label for="plan-4" class="select-plan-item col-xl-6 col-lg-6 col-md-12 col-sm-12" style="margin-bottom: 10px;"> <b>15.00%</b>  Profit daily <span>For 6-12months(s)</span>
+										</label></div> 
                                     <div class="float-profit-svg dashboard">
 									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 346.47 410.99">
 										<defs>
@@ -302,7 +302,7 @@
 
         
  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>       
-    <script>
+    <!-- <script>
         $(document).ready(function() {
             $("#make_deposit").click(function(event) {
                 
@@ -316,6 +316,52 @@
                     
                     $('#de_amount').attr('value', d_am)
                     $("#deposit_onclick1").trigger("click");
+                    
+                }
+
+            });
+
+        });
+
+    </script> -->
+        <script>
+        var type;
+        $(document).ready(function() {
+            $("#make_deposit").click(function(event) {
+                
+                event.preventDefault();
+                var d_am = $("#txtAmount").val();
+                type = $("input[name='h_id']:checked").val();
+                console.log('Type: ' + type);
+                if(d_am < 100){
+                    $('.de_message').html('<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">Minimum amount is $200</div>');
+                }else{
+                    if(type == "1" && d_am < 100){
+                       $('.de_message').html('<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">Minimum amount for this plan is $100</div>');
+                    }else if(type == "2" && d_am < 5000){
+                        $('.de_message').html('<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">Minimum amount for this plan is $5000</div>');
+                    }else if(type == "3" && d_am < 10000){
+                         $('.de_message').html('<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">Minimum amount for this plan is $10000</div>');    
+                    }else if(type == "4" && d_am < 1000){
+                         $('.de_message').html('<div class="alert alert-danger" style="border-radius:3px;text-align:center;background-color:#E23D28;color:#fff;padding:10px 85px;margin-top:0px">Minimum amount for this plan is $1000</div>');    
+                    }else{
+//                        if(d_am > 999){
+//                           type = "2"; 
+//                        }else if(d_am > 4999){
+//                           type = "3";      
+//                        }else if(d_am > 9999){
+//                           type = "4";      
+//                        }
+                        
+                        if(type == "1" && d_am > 4999){
+                            type = "2";
+                        }else if(type == "2" && d_am > 9999){
+                            type = "3";     
+                        }
+                        
+                      $('#de_amount').attr('value', d_am)
+                    $("#deposit_onclick1").trigger("click");       
+                    }
                     
                 }
 

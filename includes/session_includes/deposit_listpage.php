@@ -180,7 +180,7 @@ $prods = [];
 						</tr> -->
                                                                                                 <tr>
                                                     <td class="column1">Plan ADVANCED PLAN</td>
-                                                    <td class="column2">$10000.00 - $50000.00</td>
+                                                    <td class="column2">$10000.00 - Unlimited</td>
                                                     <td class="column3"> Profit 45.00%</td>
                                                 </tr>
                                                                                                 
@@ -230,7 +230,7 @@ $prods = [];
                                     </div>
                                 </div>
                             </div>
-                                                        <div class="container-table100">
+                            <div class="container-table100">
                                 <div class="wrap-table100">
                                     <div class="table100">
                                         <table>
@@ -247,8 +247,8 @@ $prods = [];
 						</tr> -->
                                                                                                 <tr>
                                                     <td class="column1">Plan PREMIUM PLAN</td>
-                                                    <td class="column2">$20000.00 - $500000.00</td>
-                                                    <td class="column3"> Profit 55.00%</td>
+                                                    <td class="column2">$10000.00 - unlimited</td>
+                                                    <td class="column3"> Profit 15% daily</td>
                                                 </tr>
                                                                                                 
 
@@ -265,7 +265,7 @@ $prods = [];
                                                 }
                                                 if(!empty($premium_prods) && $premium_prods[0] != ''){
                                                     foreach($premium_prods as $prod){
-                                                        $profit = (55/100) * $prod['amount'];
+                                                        $profit = (15/100) * $prod['amount'];
                                                         $profit = normalize_amount($profit);
                                                         ?>
                                                     <tr>

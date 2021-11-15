@@ -36,10 +36,18 @@ if (isset($_GET['sr']) && isset($_GET['pri']) && isset($_GET['email']) && isset(
 
 if (isset($_SESSION['id'])) {
     $base_id = $_SESSION['id'];
-    $plan_duration = array(0, 259200, 432000, 604800, 864000);
-    //    $plan_percentage = array(0, 0.1,0.3,0.45,0.55);
-    $plan_percentage = array(0, 0.135, 0.275, 0.483, 0.85);
-    $part_plan_percentage = array(0, 0.045, 0.055, 0.069, 0.085);
+    // $plan_duration = array(0, 259200, 432000, 604800, 864000);
+    // //    $plan_percentage = array(0, 0.1,0.3,0.45,0.55);
+    // $plan_percentage = array(0, 0.135, 0.275, 0.483, 0.85);
+    // $part_plan_percentage = array(0, 0.045, 0.055, 0.069, 0.085);
+
+
+    $year_v = 31104000;
+    $plan_duration = array(0, 259200,432000,604800,$year_v);    
+    $plan_percentage = array(0, 0.1,0.3,0.45,22.5);
+    $part_plan_percentage = array(0, 0.033,0.06,0.064,0.15);
+
+
     $depos = [];
     $all_depos = [];
     $all_withd = [];
@@ -51,8 +59,8 @@ if (isset($_SESSION['id'])) {
             }
         }
     }
-    if (!empty($depos) && $depos[0] != "") {
-        foreach ($depos as $depo) {
+    if(!empty($depos) && $depos[0] != ""){
+        foreach($depos as $depo){
             $depo_id = $depo['id'];
             $depo_type = $depo['type'];
             $depo_amount = $depo['amount'];
@@ -60,24 +68,30 @@ if (isset($_SESSION['id'])) {
             $depo_create_timestamp = $depo['create_timestamp'];
             $depo_last_update_timestamp = $depo['last_update_timestamp'];
             $new_last_update_timestamp = time();
-            //             && $depo_amount == $depo_total_amount
-            if (time() - $depo_create_timestamp > $plan_duration[$depo_type]) {
-                //                $n_time = time() - $depo_last_update_timestamp;
-                //            $int_day = $n_time / (24 * 3600);
-                //            $int_day = $int_day / ($plan_duration[$depo_type]/(24 * 3600));
-
+//             && $depo_amount == $depo_total_amount
+            if(time() - $depo_create_timestamp > $plan_duration[$depo_type]){
+//                $n_time = time() - $depo_last_update_timestamp;
+//            $int_day = $n_time / (24 * 3600);
+//            $int_day = $int_day / ($plan_duration[$depo_type]/(24 * 3600));
+                
                 $new_total_amount = $depo_amount + ($plan_percentage[$depo_type] * $depo_amount);
-
-                $sql_t = "UPDATE `deposit_list` SET `total_amount`='$new_total_amount', `last_update_timestamp`='$new_last_update_timestamp' WHERE `id`= '$depo_id'";
-                if (mysqli_query($link, $sql_t)) {
+                if($plan_duration[$depo_type] == $year_v){
+                    $new_total_amount = $depo_amount + (($plan_percentage[$depo_type] * $depo_amount)*2);
                 }
-            } else {
-                $rate_d = floor((time() - $depo_create_timestamp) / (86400));
-                $new_total_amount = $depo_amount + ($part_plan_percentage[$depo_type] * $depo_amount * $rate_d);
-                $sql_t = "UPDATE `deposit_list` SET `total_amount`='$new_total_amount', `last_update_timestamp`='$new_last_update_timestamp' WHERE `id`= '$depo_id'";
-                if (mysqli_query($link, $sql_t)) {
-                }
+                
+                $sql_t = "UPDATE `deposit_list` SET `total_amount`='$new_total_amount', `last_update_timestamp`='$new_last_update_timestamp' WHERE `id`= '$depo_id'";    
+                                        if(mysqli_query($link, $sql_t)){
+                                        }
+                
+            }else{
+               $rate_d = floor((time() - $depo_create_timestamp)/(86400));
+               $new_total_amount = $depo_amount + ($part_plan_percentage[$depo_type] * $depo_amount * $rate_d);
+                $sql_t = "UPDATE `deposit_list` SET `total_amount`='$new_total_amount', `last_update_timestamp`='$new_last_update_timestamp' WHERE `id`= '$depo_id'";    
+                                        if(mysqli_query($link, $sql_t)){
+                                        }
             }
+            
+            
         }
     }
 

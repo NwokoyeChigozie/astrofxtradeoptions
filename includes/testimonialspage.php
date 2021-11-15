@@ -917,7 +917,7 @@
                   <h2 style="color:#000 !important">ADVANCED</h2>
                 <div class="plan-profit"> <strong>45<b>%</b></strong> <span> <br>In 7 Days</span></div>
                 <div class="plan-bg"></div>
-                <div class="plan-bottom"> <span>Minimum Deposit:</span> <strong>$10,000<b></b></strong> <span>Maximum Deposit:</span> <strong>$50,000</strong>
+                <div class="plan-bottom"> <span>Minimum Deposit:</span> <strong>$10,000<b></b></strong> <span>Maximum Deposit:</span> <strong>Unlimited</strong>
                 <div class=""> 
 								<a onclick="openModal('register-modal')" class="btn">Sign Up</a> 
 								</div>
@@ -930,9 +930,10 @@
             <div class="plan-item plan2">
               <div class="plan-body">
                   <h2 style="color:#000 !important">PREMIUM</h2>
-                <div class="plan-profit"> <strong>55<b>%</b></strong> <span><br>In 10 Days</span></div>
-                <div class="plan-bg"></div>
-                <div class="plan-bottom"> <span>Minimum Deposit:</span> <strong>$20,000<b></b></strong> <span>Maximum Deposit:</span> <strong>Unlimited</strong> 
+                <div class="plan-profit"> <strong>15<b>% daily </b></strong><span>for 6-12 months</span> </div>
+<!--                <div class="plan-bg"></div>-->
+                  
+                <div class="plan-bottom"> <span>Minimum Deposit:</span> <strong>$1,000<b></b></strong> <span>Maximum Deposit:</span> <strong>Unlimited</strong> 
                 <div class=""> 
 								<a onclick="openModal('register-modal')" class="btn">Sign Up</a> 
 								</div>
